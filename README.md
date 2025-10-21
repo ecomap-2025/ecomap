@@ -21,7 +21,7 @@ O projeto foi construído com as seguintes tecnologias:
 
 | **TECNOLOGIA** | **DESCRIÇÃO** |
 | :--- | :--- |
-| Node.js com Django | Backend |
+| Python com Django | Backend |
 | PostgreeSQL com PostGIS | Banco de Dados |
 | React Native | Mobile |
 | OpenStreetMap | API para Mapa |
