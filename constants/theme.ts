@@ -17,5 +17,6 @@ export const Colors = {
     inputBackground: cinza,
     gradientDark: claro,
     gradientLight: escuro,
+    card: cinza, 
   },
 };

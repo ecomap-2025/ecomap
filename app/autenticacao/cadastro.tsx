@@ -83,7 +83,7 @@ export default function IndexScreen() {
                   shadowOpacity: pressed ? 0.2 : 0.35
                 }
               ]}
-              onPress={() => router.push('/inicio')}
+              onPress={() => router.push('/autenticacao/login')}
             >
               <Text style={[styles.buttonText, { color: '#ffffff' }]}>CADASTRAR</Text>
             </Pressable>
@@ -92,7 +92,7 @@ export default function IndexScreen() {
                 style={({ pressed }) => [
                     { opacity: pressed ? 0.7 : 1 } 
                 ]}
-                onPress={() => router.push('/login')}
+                onPress={() => router.push('/autenticacao/login')}
                 >
                 <Text style={[styles.link, { color: '#232323' }]}>
                     Já possui cadastro?{' '}

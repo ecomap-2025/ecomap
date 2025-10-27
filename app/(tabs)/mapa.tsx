@@ -14,7 +14,7 @@ export default function IndexScreen() {
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: fundo }]}>
       
-      <Text style={[styles.subtitle, { color: texto }]}>INICIO</Text>
+      <Text style={[styles.subtitle, { color: texto }]}>MAPA</Text>
       
     </ScrollView>
   );
