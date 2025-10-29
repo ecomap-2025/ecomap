@@ -5,7 +5,7 @@ django-filter==25.2
 djangorestframework==3.16.1
 djangorestframework-gis==1.2.0
 drf-yasg==1.21.11
-gdal==3.11.1
+gdal==3.6.2
 gunicorn==23.0.0
 inflection==0.5.1
 packaging==25.0
