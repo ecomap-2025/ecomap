@@ -56,12 +56,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 60,
     borderRadius: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
+    boxShadow: '0px 1px 6px rgba(0, 0, 0, 0.35)',
     elevation: 6,
-
   },
   buttonText: {
     fontSize: width * 0.045,

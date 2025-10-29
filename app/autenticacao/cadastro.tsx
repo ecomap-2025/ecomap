@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 
-import { Dimensions, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Dimensions, Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -28,18 +28,18 @@ export default function IndexScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={styles.container}>
-          <Image source={require('@/assets/imgs/logo.png')} style={styles.logo} />
-          <Text style={[styles.title, { color: texto }]}>EcoMap</Text>
+        <View style={{ flex: 1, alignItems: 'center' }}>
+          <Image source={require('@/assets/imgs/logo.png')} style={{ width: width * 0.35, height: width * 0.35, marginTop: height * 0.05, marginBottom: 10, resizeMode: 'contain' }} />
+          <Text style={{ fontSize: width * 0.12, fontFamily: 'Poppins-Bold', color: texto }}>EcoMap</Text>
           
           <LinearGradient 
             colors={[verdeClaro, verdeEscuro]} 
-            style={styles.gradientContainer}
+            style={{ flex: 1, width: '100%', borderTopLeftRadius: 50, borderTopRightRadius: 50, marginTop: 50, alignItems: 'center', paddingVertical: 40 }}
           >
-            <Text style={[styles.loginTitle, { color: texto }]}>CADASTRO</Text>
+            <Text style={{ fontSize: width * 0.07, fontFamily: 'Poppins-SemiBold', marginBottom: 30, color: texto }}>CADASTRO</Text>
 
             <TextInput 
-              style={styles.input} 
+              style={{ height: 50, width: '80%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, fontSize: 16, color: '#333', marginBottom: 20 }}
               onChangeText={setNome} 
               value={nome}
               placeholder="Nome"
@@ -48,7 +48,7 @@ export default function IndexScreen() {
             />
 
             <TextInput 
-              style={styles.input} 
+              style={{ height: 50, width: '80%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, fontSize: 16, color: '#333', marginBottom: 20 }}
               onChangeText={setEmail} 
               value={email}
               placeholder="E-mail"
@@ -57,7 +57,7 @@ export default function IndexScreen() {
             />
 
             <TextInput 
-              style={styles.input} 
+              style={{ height: 50, width: '80%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, fontSize: 16, color: '#333', marginBottom: 20 }}
               onChangeText={setSenha} 
               value={senha}
               placeholder="Senha"
@@ -66,7 +66,7 @@ export default function IndexScreen() {
             />
 
             <TextInput 
-              style={styles.input} 
+              style={{ height: 50, width: '80%', backgroundColor: '#fff', borderRadius: 15, paddingHorizontal: 15, fontSize: 16, color: '#333', marginBottom: 20 }}
               onChangeText={setConfSenha} 
               value={confSenha}
               placeholder="Confirmar senha"
@@ -75,31 +75,23 @@ export default function IndexScreen() {
             />
 
             <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                { 
-                  backgroundColor: laranja,
-                  opacity: pressed ? 0.7 : 1,
-                  shadowOpacity: pressed ? 0.2 : 0.35
-                }
-              ]}
+              style={({ pressed }) => ({ marginTop: 20, paddingVertical: 10, paddingHorizontal: 60, borderRadius: 12, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowRadius: 6, elevation: 6, backgroundColor: laranja, opacity: pressed ? 0.7 : 1, shadowOpacity: pressed ? 0.2 : 0.35 })}
               onPress={() => router.push('/autenticacao/login')}
             >
-              <Text style={[styles.buttonText, { color: '#ffffff' }]}>CADASTRAR</Text>
+              <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-SemiBold', color: '#ffffff' }}>
+                CADASTRAR
+              </Text>
             </Pressable>
 
             <Pressable
-                style={({ pressed }) => [
-                    { opacity: pressed ? 0.7 : 1 } 
-                ]}
-                onPress={() => router.push('/autenticacao/login')}
-                >
-                <Text style={[styles.link, { color: '#232323' }]}>
-                    Já possui cadastro?{' '}
-                    <Text style={{ fontFamily: 'Poppins-Bold' }}>Fazer login</Text>
-                </Text>
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+              onPress={() => router.push('/autenticacao/login')}
+            >
+              <Text style={{ marginTop: 20, paddingVertical: 10, paddingHorizontal: 60, borderRadius: 12, alignItems: 'center', elevation: 6, color: '#232323' }}>
+                Já possui cadastro?{' '}
+                <Text style={{ fontFamily: 'Poppins-Bold' }}>Fazer login</Text>
+              </Text>
             </Pressable>
-
 
           </LinearGradient>
         </View>
@@ -107,67 +99,3 @@ export default function IndexScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  logo: {
-    width: width * 0.35,
-    height: width * 0.35,
-    marginTop: height * 0.10,
-    marginBottom: 10,
-    resizeMode: 'contain'
-  },
-  title: {
-    fontSize: width * 0.12,
-    fontFamily: 'Poppins-Bold',
-  },
-  gradientContainer: {
-    flex: 1,
-    width: '100%',
-    borderTopLeftRadius: 50,
-    borderTopRightRadius: 50,
-    marginTop: 50,
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  loginTitle: {
-    fontSize: width * 0.07,
-    fontFamily: 'Poppins-SemiBold',
-    marginBottom: 30
-  },
-  input: {
-    height: 50,
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 20,
-  },
-  button: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 60,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 6,
-  },
-  buttonText: {
-    fontSize: width * 0.045,
-    fontFamily: 'Poppins-SemiBold',
-  },
-  link: {
-    fontSize: width * 0.045,
-    color: '#232323',
-    marginTop: 30
-  }
-
-});

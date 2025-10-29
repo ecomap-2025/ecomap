@@ -85,13 +85,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'ecomap_db', # Banco de Dados
-        'USER': 'ecomap_user',
-        'PASSWORD': 'Map@@597862',
-        'HOST': 'localhost', # O padrão é localhost
-        'PORT': '5432', # Porta Padrão
+        'NAME': os.getenv('DB_NAME', 'ecomap_db'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
+
 
 
 # Password validation
