@@ -1,70 +1,101 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { useRouter } from 'expo-router';
-import { Dimensions, ScrollView, StyleSheet, Text } from 'react-native';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
+import MapView, { Callout, Marker, PROVIDER_DEFAULT, UrlTile } from 'react-native-maps';
 
-const { width, height } = Dimensions.get('window');
+// PASSO 1: Definir a estrutura (Interface) dos seus dados
+// Esta é a "planta" do objeto que sua API retorna.
+interface PontoProperties {
+  id: number;
+  nome: string;
+  endereco: string;
+  // Adicione outros campos se precisar usá-los no Callout
+}
+
+interface PointGeometry {
+  type: 'Point';
+  coordinates: [number, number]; // [longitude, latitude]
+}
+
+interface GeoJsonFeature {
+  type: 'Feature';
+  geometry: PointGeometry;
+  properties: PontoProperties;
+}
+
 
 export default function IndexScreen() {
   const fundo = useThemeColor({}, 'background');
   const texto = useThemeColor({}, 'text');
-  const laranja = useThemeColor({}, 'primary');
 
-  const router = useRouter();
+  // PASSO 2: Aplicar a Interface ao useState
+  // A sintaxe <GeoJsonFeature[]> diz: "Este estado será um array de objetos GeoJsonFeature"
+  const [pontos, setPontos] = useState<GeoJsonFeature[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const buscarPontos = async () => {
+      try {
+        // A resposta do axios já vem com um tipo genérico, então os dados se encaixam
+        const response = await axios.get<{ features: GeoJsonFeature[] }>('https://ecomap-j557.onrender.com/api/pontos-coleta/');
+        setPontos(response.data.features);
+      } catch (error) {
+        console.error("Erro ao buscar pontos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    buscarPontos();
+  }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: fundo }}>
+        <Text style={{ color: texto, fontFamily: 'Poppins-Regular', fontSize: 18 }}>Carregando mapa...</Text>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: fundo }]}>
-      
-      <Text style={[styles.subtitle, { color: texto }]}>MAPA</Text>
-      
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      <MapView
+        provider={PROVIDER_DEFAULT}
+        style={{ flex: 1 }}
+        initialRegion={{
+          latitude: -19.9224,
+          longitude: -44.0583,
+          latitudeDelta: 0.15,
+          longitudeDelta: 0.15,
+        }}
+      >
+        <UrlTile
+          urlTemplate="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maximumZ={19}
+        />
+        
+        {pontos.map(ponto => {
+          // Agora o TypeScript sabe que 'ponto' tem 'geometry' e 'properties'!
+          const [longitude, latitude] = ponto.geometry.coordinates;
+          return (
+            <Marker
+              key={ponto.properties.id}
+              coordinate={{ latitude, longitude }}
+            >
+              <Callout>
+                <View style={{ padding: 10, width: 220 }}>
+                  <Text style={{ fontFamily: 'Poppins-Bold', fontSize: 16, color: '#333' }}>
+                    {ponto.properties.nome}
+                  </Text>
+                  <Text style={{ fontFamily: 'Poppins-Regular', color: '#666' }}>
+                    {ponto.properties.endereco}
+                  </Text>
+                </View>
+              </Callout>
+            </Marker>
+          );
+        })}
+      </MapView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: height * 0.05,
-  },
-  logo: {
-    width: width * 0.35,
-    height: width * 0.35,
-    marginBottom: 24,
-    resizeMode: 'contain',
-  },
-  subtitle: {
-    fontSize: width * 0.05,
-    fontFamily: 'Poppins-Regular',
-    marginBottom: 5,
-  },
-  title: {
-    fontSize: width * 0.12,
-    fontFamily: 'Poppins-Bold',
-    marginBottom: 24,
-    textAlign: 'center'
-  },
-  mainImage: {
-    width: width * 0.7,
-    height: width * 0.7,
-    marginBottom: 24,
-    resizeMode: 'contain',
-  },
-  button: {
-    marginTop: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 60,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-    elevation: 6,
-
-  },
-  buttonText: {
-    fontSize: width * 0.045,
-    fontFamily: 'Poppins-SemiBold',
-  }
-});

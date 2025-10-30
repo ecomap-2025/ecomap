@@ -1,6 +1,6 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useRouter } from 'expo-router';
-import { Dimensions, Image, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,18 +22,12 @@ export default function InicioScreen() {
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: fundo, flex: 1 }} contentContainerStyle={{ alignItems: 'center', paddingVertical: height * 0.05, paddingHorizontal: width * 0.05 }}>
-      <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Pressable onPress={() => router.push('/autenticacao/login')}>
-          <Image source={require('@/assets/imgs/icons/logout.png')} style={{ width: width * 0.1, height: width * 0.1, resizeMode: 'contain' }} />
-        </Pressable>
-        <Image source={require('@/assets/imgs/logo.png')} style={{ width: width * 0.35, height: width * 0.35, resizeMode: 'contain' }} />
-        <Pressable onPress={() => router.push('/perfil')}>
-          <Image source={require('@/assets/imgs/icons/account.png')} style={{ width: width * 0.1, height: width * 0.1, resizeMode: 'contain' }} />
-        </Pressable>
+      <View style={{ width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+        <Image source={require('@/assets/imgs/logo.png')} style={{ width: width * 0.25, height: width * 0.25, resizeMode: 'contain' }} />
       </View>
 
       <View style={{ width: '100%', alignItems: 'center', marginBottom: height * 0.03 }}>
-        <Text style={{ fontSize: width * 0.07, fontFamily: 'Poppins-Bold', color: texto }}>Olá, Usuário!</Text>
+        <Text style={{ fontSize: width * 0.07, fontFamily: 'Poppins-Bold', color: texto }}>Olá!</Text>
         <Text style={{ fontSize: width * 0.04, fontFamily: 'Poppins-Regular', color: texto }}>Seja bem-vindo(a) ao EcoMap!</Text>
       </View>
 

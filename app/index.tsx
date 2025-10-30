@@ -22,7 +22,7 @@ export default function IndexScreen() {
       
       <Pressable
         style={({ pressed }) => ({ marginTop: 20, paddingVertical: 10, paddingHorizontal: 60, borderRadius: 12, alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowRadius: 6, elevation: 6, backgroundColor: laranja, opacity: pressed ? 0.7 : 1, shadowOpacity: pressed ? 0.2 : 0.35 })}
-        onPress={() => router.push('/autenticacao/login')}
+        onPress={() => router.push('/(tabs)')}
       >
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-SemiBold', color: '#fff' }}>COMEÇAR</Text>
       </Pressable>
