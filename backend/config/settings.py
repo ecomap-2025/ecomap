@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-0gb*842=g(wj86r7r=#vdc^_e0tx3=5sc30ye-cr1!dn=fd&e0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['ecomap-67nl.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['ecomap-j557.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
