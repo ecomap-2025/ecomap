@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-0gb*842=g(wj86r7r=#vdc^_e0tx3=5sc30ye-cr1!dn=fd&e0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://ecomap-api-013m.onrender.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['ecomap-api-013m.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -84,7 +84,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 if 'DATABASE_URL' in os.environ:
-    # Estamos na produção (Render)
     DATABASES = {
         'default': dj_database_url.config(
             conn_max_age=600,
@@ -94,7 +93,6 @@ if 'DATABASE_URL' in os.environ:
     }
     DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 else:
-    # Estamos no desenvolvimento (seu PC)
     DATABASES = {
         'default': {
             'ENGINE': 'django.contrib.gis.db.backends.postgis',
