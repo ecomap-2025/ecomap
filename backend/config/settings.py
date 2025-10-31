@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +29,7 @@ SECRET_KEY = 'django-insecure-0gb*842=g(wj86r7r=#vdc^_e0tx3=5sc30ye-cr1!dn=fd&e0
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://ecomap-api-013m.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -82,16 +83,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'ecomap_db', # Banco de Dados
-        'USER': 'ecomap_user',
-        'PASSWORD': 'Map@@597862',
-        'HOST': 'localhost', # O padrão é localhost
-        'PORT': '5432', # Porta Padrão
+if 'DATABASE_URL' in os.environ:
+    # Estamos na produção (Render)
+    DATABASES = {
+        'default': dj_database_url.config(
+            conn_max_age=600,
+            ssl_require=True,
+            default=os.environ['DATABASE_URL']
+        )
     }
-}
+    DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
+else:
+    # Estamos no desenvolvimento (seu PC)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'ecomap_db',
+            'USER': 'EcoAdmin',
+            'PASSWORD': 'Map@1027310916',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
 
 
 # Password validation
