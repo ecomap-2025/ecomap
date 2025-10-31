@@ -22,7 +22,7 @@ export default function CadastrarPontoColetaScreen() {
   const handleCadastro = async () => {
     if (!nome || !endereco) {
       Alert.alert('Atenção', 'Por favor, preencha os campos obrigatórios: Nome e Endereço.');
-      return;
+      return; 
     }
     
     setEnviando(true);
@@ -33,8 +33,6 @@ export default function CadastrarPontoColetaScreen() {
       telefone: telefone,
       email: email,
       horario_funcionamento: horario,
-      // ATENÇÃO: Verifique se sua API espera uma lista de nomes ou de IDs.
-      // Isto envia uma lista de nomes. Pode precisar de ajuste.
       tipos_residuos_aceitos: tiposResiduos.split(',').map(item => item.trim()).filter(item => item),
     };
 
@@ -45,12 +43,11 @@ export default function CadastrarPontoColetaScreen() {
       Alert.alert('Sucesso!', 'O novo ponto de coleta foi cadastrado.');
       router.back();
 
-    } catch (error) { // 'error' é do tipo 'unknown' por segurança do TypeScript
+    } catch (error) { 
       let mensagemErro = 'Não foi possível cadastrar o ponto. Tente novamente mais tarde.';
 
       if (axios.isAxiosError(error)) {
         console.error("Erro de API:", error.response?.data || error.message);
-        // Tenta extrair mensagens de erro específicas da resposta da API (ex: Django)
         if (error.response?.data && typeof error.response.data === 'object') {
             const detalhesErro = Object.values(error.response.data).flat().join('\n');
             mensagemErro = `Erro ao cadastrar: \n${detalhesErro}`;

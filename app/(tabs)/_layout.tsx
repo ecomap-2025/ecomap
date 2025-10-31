@@ -20,7 +20,7 @@ export default function TabLayout() {
           fontSize: 12,
         },
       }}>
-
+      
       <Tabs.Screen
         name="index"
         options={{
@@ -62,6 +62,7 @@ export default function TabLayout() {
           ),
         }}
       />
+      
       <Tabs.Screen
         name="novo-local"
         options={{
@@ -76,7 +77,7 @@ export default function TabLayout() {
         }}
       />
 
-    <Tabs.Screen
+      <Tabs.Screen
         name="educativo"
         options={{
           title: 'Educativo',
@@ -87,6 +88,14 @@ export default function TabLayout() {
               style={{ width: size, height: size, tintColor: color }}
             />
           ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="itens"
+        options={{
+          href: null, 
+          title: 'Detalhes', 
         }}
       />
     </Tabs>
