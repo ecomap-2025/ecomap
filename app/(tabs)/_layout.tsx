@@ -64,9 +64,9 @@ export default function TabLayout() {
       />
       
       <Tabs.Screen
-        name="novo-local"
+        name="novo"
         options={{
-          title: 'Novo local',
+          title: 'Novo',
           tabBarIcon: ({ color, size }) => (
             <Image
               source={require('@/assets/imgs/icons/add.png')}
@@ -80,7 +80,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="educativo"
         options={{
-          title: 'Educativo',
+          title: 'Aprenda',
           tabBarIcon: ({ color, size }) => (
             <Image
               source={require('@/assets/imgs/icons/class.png')}

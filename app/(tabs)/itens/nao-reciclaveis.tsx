@@ -14,7 +14,7 @@ export default function IndexScreen() {
       {/* Imagem de Cabeçalho - Lembre-se de trocar o caminho da imagem */}
       <View style={{ width: '100%', height: height * 0.3, overflow: 'hidden' }}>
         <Image
-          source={require('@/assets/imgs/nao-reciclavel.jpg')} // ATENÇÃO: Troque para uma imagem apropriada
+          source={require('@/assets/imgs/nao-reciclaveis.jpg')} // ATENÇÃO: Troque para uma imagem apropriada
           style={{ width: '100%', height: '100%', resizeMode: 'cover', opacity: 0.8 }}
         />
       </View>
