@@ -11,7 +11,6 @@ export default function IndexScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: fundo }}>
-      {/* Imagem de Cabeçalho */}
       <View style={{ width: '100%', height: height * 0.3, overflow: 'hidden' }}>
         <Image
           source={require('@/assets/imgs/plastico.jpg')}
@@ -19,12 +18,10 @@ export default function IndexScreen() {
         />
       </View>
 
-      {/* Título Principal */}
       <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#cb3032', textAlign: 'center', marginTop: 15 }}>
-        Plástico
+        Plásticos
       </Text>
 
-      {/* Seção: O que é? */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           O que é?
@@ -34,7 +31,6 @@ export default function IndexScreen() {
         </Text>
       </View>
 
-      {/* Seção: Impacto no Meio Ambiente */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           Impacto no Meio Ambiente
@@ -44,7 +40,6 @@ export default function IndexScreen() {
         </Text>
       </View>
 
-      {/* Seção: Descarte Correto */}
       <View style={{ marginHorizontal: 10, marginTop: 15, marginBottom: 50 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           Descarte Correto

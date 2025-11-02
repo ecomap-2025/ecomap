@@ -41,12 +41,12 @@ export default function IndexScreen() {
           setPontos(response.data.features);
         } else {
           console.warn("A resposta da API não continha a propriedade 'features' esperada.");
-          setPontos([]); // Define como array vazio para não quebrar o .map
+          setPontos([]);
         }
 
       } catch (error) {
         console.error("Erro ao buscar pontos:", error);
-        setPontos([]); // Em caso de erro na rede, também garante que `pontos` seja um array
+        setPontos([]); 
       } finally {
         setLoading(false);
       }

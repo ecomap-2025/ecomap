@@ -11,20 +11,17 @@ export default function IndexScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: fundo }}>
-      {/* Imagem de Cabeçalho - Lembre-se de trocar o caminho da imagem */}
       <View style={{ width: '100%', height: height * 0.3, overflow: 'hidden' }}>
         <Image
-          source={require('@/assets/imgs/nao-reciclaveis.jpg')} // ATENÇÃO: Troque para uma imagem apropriada
+          source={require('@/assets/imgs/nao-reciclaveis.jpg')} 
           style={{ width: '100%', height: '100%', resizeMode: 'cover', opacity: 0.8 }}
         />
       </View>
 
-      {/* Título Principal */}
-      <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#cb3032', textAlign: 'center', marginTop: 15 }}>
+      <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#606060', textAlign: 'center', marginTop: 15 }}>
         Não Recicláveis
       </Text>
 
-      {/* Seção: O que é? */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           O que é?
@@ -34,7 +31,6 @@ export default function IndexScreen() {
         </Text>
       </View>
 
-      {/* Seção: Impacto no Meio Ambiente */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           Impacto no Meio Ambiente
@@ -44,7 +40,6 @@ export default function IndexScreen() {
         </Text>
       </View>
 
-      {/* Seção: Descarte Correto */}
       <View style={{ marginHorizontal: 10, marginTop: 15, marginBottom: 50 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           Descarte Correto

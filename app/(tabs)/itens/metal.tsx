@@ -11,20 +11,17 @@ export default function IndexScreen() {
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: fundo }}>
-      {/* Imagem de Cabeçalho - Lembre-se de trocar o caminho da imagem */}
       <View style={{ width: '100%', height: height * 0.3, overflow: 'hidden' }}>
         <Image
-          source={require('@/assets/imgs/metal.jpg')} // ATENÇÃO: Troque para uma imagem de metais
+          source={require('@/assets/imgs/metal.jpg')}
           style={{ width: '100%', height: '100%', resizeMode: 'cover', opacity: 0.8 }}
         />
       </View>
 
-      {/* Título Principal */}
-      <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#cb3032', textAlign: 'center', marginTop: 15 }}>
+      <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#ffcf2a', textAlign: 'center', marginTop: 15 }}>
         Metais
       </Text>
 
-      {/* Seção: O que é? */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           O que é?

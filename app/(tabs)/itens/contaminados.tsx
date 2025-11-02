@@ -4,14 +4,13 @@ import { Dimensions, Image, ScrollView, Text, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export default function IndexScreen() {
+export default function ContaminadosScreen() {
   const fundo = useThemeColor({}, 'background');
   const texto = useThemeColor({}, 'text');
   const router = useRouter();
 
   return (
     <ScrollView contentContainerStyle={{ flexGrow: 1, backgroundColor: fundo }}>
-      {/* Imagem de Cabeçalho */}
       <View style={{ width: '100%', height: height * 0.3, overflow: 'hidden' }}>
         <Image
           source={require('@/assets/imgs/contaminados.jpg')}
@@ -19,42 +18,38 @@ export default function IndexScreen() {
         />
       </View>
 
-      {/* Título Principal */}
-      <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#cb3032', textAlign: 'center', marginTop: 15 }}>
-        Resíduos Contaminados
+      <Text style={{ fontSize: width * 0.08, fontFamily: 'Poppins-Bold', color: '#6b6b6bff', textAlign: 'center', marginTop: 15 }}>
+        Contaminados
       </Text>
 
-      {/* Seção: O que é? */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           O que é?
         </Text>
         <Text style={{ fontSize: width * 0.035, fontFamily: 'Poppins-Regular', color: texto, textAlign: 'justify', marginTop: 5 }}>
-          Resíduos contaminados são materiais que, durante seu ciclo de uso, foram impregnados com substâncias químicas, biológicas ou tóxicas. Exemplos comuns incluem embalagens de agrotóxicos, latas de tinta, solventes, óleos lubrificantes e materiais hospitalares. A presença desses contaminantes os classifica como perigosos, exigindo um manejo diferenciado.
+          Resíduos contaminados são materiais que contêm substâncias tóxicas, inflamáveis, corrosivas ou patogênicas, representando um risco à saúde pública e ao meio ambiente. Incluem itens como pilhas, baterias, lâmpadas fluorescentes, embalagens de agrotóxicos, resíduos hospitalares (seringas, curativos) e produtos químicos vencidos.
         </Text>
       </View>
 
-      {/* Seção: Impacto no Meio Ambiente */}
       <View style={{ marginHorizontal: 10, marginTop: 15 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           Impacto no Meio Ambiente
         </Text>
         <Text style={{ fontSize: width * 0.035, fontFamily: 'Poppins-Regular', color: texto, textAlign: 'justify', marginTop: 5 }}>
-          O descarte inadequado de resíduos contaminados acarreta severas consequências. As substâncias nocivas podem infiltrar-se no solo e atingir lençóis freáticos, contaminando fontes de água. A disposição em aterros comuns pode gerar gases tóxicos e comprometer a fauna e a flora locais, causando desequilíbrios ecossistêmicos de longa duração.
+          O descarte incorreto de resíduos contaminados é extremamente prejudicial. Eles podem infiltrar-se no solo e atingir os lençóis freáticos, contaminando a água que consumimos e usamos na agricultura. Essas substâncias tóxicas podem se acumular na cadeia alimentar, afetando animais e plantas, e causar graves problemas de saúde em seres humanos.
         </Text>
       </View>
 
-      {/* Seção: Descarte Correto */}
       <View style={{ marginHorizontal: 10, marginTop: 15, marginBottom: 50 }}>
         <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-Bold', color: texto, textAlign: 'center' }}>
           Descarte Correto
         </Text>
         <Text style={{ fontSize: width * 0.035, fontFamily: 'Poppins-Regular', color: texto, textAlign: 'justify', marginTop: 5, lineHeight: 22 }}>
-          <Text style={{ fontFamily: 'Poppins-Bold' }}>1. Proibição do Descarte em Lixo Comum:</Text> É fundamental que resíduos contaminados não sejam misturados ao lixo doméstico ou reciclável, pois necessitam de tratamento específico.
+          <Text style={{ fontFamily: 'Poppins-Bold' }}>1. Separação Absoluta:</Text> NUNCA misture esses itens com o lixo comum ou reciclável. Mantenha-os completamente separados desde o momento do uso.
           {'\n\n'}
-          <Text style={{ fontFamily: 'Poppins-Bold' }}>2. Segregação Adequada:</Text> Realize a separação rigorosa desses materiais na fonte geradora, acondicionando-os em recipientes seguros e identificados.
+          <Text style={{ fontFamily: 'Poppins-Bold' }}>2. Embalagem Segura:</Text> Armazene-os, se possível, em suas embalagens originais ou em recipientes resistentes e bem vedados para evitar vazamentos.
           {'\n\n'}
-          <Text style={{ fontFamily: 'Poppins-Bold' }}>3. Encaminhamento a Pontos de Coleta:</Text> O descarte deve ser realizado exclusivamente em postos de coleta especializados que garantem o encaminhamento para tratamento e disposição final adequados.
+          <Text style={{ fontFamily: 'Poppins-Bold' }}>3. Pontos de Coleta Específicos:</Text> Leve os resíduos a locais de descarte apropriados. Supermercados e farmácias costumam recolher pilhas, baterias e medicamentos. Para outros itens, procure ecopontos ou consulte a prefeitura da sua cidade.
         </Text>
       </View>
     </ScrollView>

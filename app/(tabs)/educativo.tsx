@@ -4,24 +4,26 @@ import { Dimensions, Image, Pressable, ScrollView, Text, View } from 'react-nati
 
 const { width, height } = Dimensions.get('window');
 
-type RouteType = '/itens/plastico' | '/itens/papel' | '/itens/metal' | '/itens/organico' | '/itens/vidro' | '/itens/nao-reciclaveis'| '/itens/perigosos'| '/itens/contaminados';
+type RouteType = '/itens/plastico' | '/itens/papel' | '/itens/metal' | '/itens/organico' | '/itens/vidro' | '/itens/nao-reciclaveis'| '/itens/perigosos' | '/itens/contaminados';
+
+const buttonData = [
+  { label: 'PLÁSTICO', route: '/itens/plastico' as RouteType, color: '#cb3032' },
+  { label: 'PAPEL', route: '/itens/papel' as RouteType, color: '#3d4594' },
+  { label: 'METAL', route: '/itens/metal' as RouteType, color: '#f3c01aff' },
+  { label: 'ORGÂNICO', route: '/itens/organico' as RouteType, color: '#6b422f' },
+  { label: 'VIDRO', route: '/itens/vidro' as RouteType, color: '#15a85e' },
+  { label: 'PERIGOSOS', route: '/itens/perigosos' as RouteType, color: '#ff6800' },
+  { label: 'NÃO RECICLÁVEIS', route: '/itens/nao-reciclaveis' as RouteType, color: '#606060' },
+  { label: 'CONTAMINADOS', route: '/itens/contaminados' as RouteType, color: '#1e1b1c' }, 
+];
+
 
 export default function InicioScreen() {
   const fundo = useThemeColor({}, 'background');
   const texto = useThemeColor({}, 'text');
   const router = useRouter();
-
-  const buttonColors = {
-    PLÁSTICO: '#cb3032', 
-    PAPEL: '#3d4594',   
-    METAL: '#ffcf2a',   
-    ORGANICO: '#6b422f', 
-    VIDRO: '#15a85e',  
-    PERIGOSOS: '#ff6800',
-    NAORECICLAVEIS: '#FF0000',
-    CONTAMINADOS: '#1e1b1c'  
-  };
-return (
+  
+  return (
     <ScrollView 
       showsVerticalScrollIndicator={false} 
       style={{ backgroundColor: fundo, flex: 1 }} 
@@ -50,31 +52,7 @@ return (
         width: '100%',
         paddingHorizontal: width * 0.04,
       }}>
-        {[{
-          label: 'PLÁSTICO',
-          route: '/itens/plastico' as RouteType, 
-        }, {
-          label: 'PAPEL',
-          route: '/itens/papel' as RouteType, 
-        }, {
-          label: 'METAL',
-          route: '/itens/metal' as RouteType, 
-        }, {
-          label: 'ORGANICO',
-          route: '/itens/organico' as RouteType,
-        }, {
-          label: 'VIDRO',
-          route: '/itens/vidro' as RouteType, 
-        }, {
-          label: 'PERIGOSOS',
-          route: '/itens/perigosos' as RouteType, 
-        },{
-          label: 'NÃO RECICLÁVEIS',
-          route: '/itens/nao-reciclaveis' as RouteType, 
-        },{
-          label: 'CONTAMINADOS',
-          route: '/itens/contaminados' as RouteType, 
-        }].map((item, index) => (
+        {buttonData.map((item, index) => (
           <Pressable
             key={index}
             onPress={() => router.push(item.route)}
@@ -87,7 +65,7 @@ return (
               flexDirection: 'column',
               alignItems: 'center',   
               justifyContent: 'center',
-              backgroundColor: buttonColors[item.label as keyof typeof buttonColors],
+              backgroundColor: item.color,
               opacity: pressed ? 0.7 : 1,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 }, 
