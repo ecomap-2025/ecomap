@@ -19,19 +19,14 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         geo_field = "localizacao"
         fields = ['id', 'nome', 'endereco', 'telefone', 'email', 'horario_funcionamento', 'localizacao', 'tipos_residuos_aceitos']
 
-    # Sobrescrevemos o método create para lidar com os dados de localização e M2M.
     def create(self, validated_data):
-        # 1. Separa os dados de relacionamento e localização
         tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos')
-        localizacao_data = validated_data.pop('localizacao')
+        localizacao_data = validated_data.pop('localizacao', None)
 
-        # 2. Cria o objeto PontoColeta com os dados simples
         ponto_coleta = PontoColeta.objects.create(**validated_data)
 
-        # 3. Define a relação Muitos-para-Muitos
         ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
 
-        # 4. Cria o objeto Point e o atribui, se a localização foi enviada
         if localizacao_data:
             ponto_coleta.localizacao = Point(localizacao_data['coordinates'])
             ponto_coleta.save()
