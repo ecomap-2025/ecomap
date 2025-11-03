@@ -1,6 +1,5 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
 import axios from 'axios';
-import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -27,6 +26,23 @@ interface TipoResiduo {
     reciclavel: boolean;
 }
 
+// Função para gerar coordenadas aleatórias dentro de um raio
+// Ponto central: Praça da Glória, Contagem | Raio de ~5.5km
+const generateRandomCoordinates = (
+    center = { lat: -19.9327, lon: -44.0534 },
+    radius = 0.05 // 0.05 graus é aproximadamente 5.5 km
+) => {
+    const y0 = center.lat;
+    const x0 = center.lon;
+    const rd = radius * Math.sqrt(Math.random()); // sqrt para distribuição uniforme
+    const angl = Math.random() * 2 * Math.PI;
+
+    const x = x0 + rd * Math.cos(angl);
+    const y = y0 + rd * Math.sin(angl);
+
+    return { longitude: x, latitude: y };
+};
+
 export default function CadastrarScreen() {
     const fundo = useThemeColor({}, 'background');
     const texto = useThemeColor({}, 'text');
@@ -39,8 +55,6 @@ export default function CadastrarScreen() {
     const [email, setEmail] = useState('');
     const [horario, setHorario] = useState('');
     const [enviando, setEnviando] = useState(false);
-    const [localizacao, setLocalizacao] = useState<Location.LocationObject | null>(null);
-    const [buscandoLocalizacao, setBuscandoLocalizacao] = useState(false);
     const [tiposResiduosDisponiveis, setTiposResiduosDisponiveis] = useState<TipoResiduo[]>([]);
     const [residuosSelecionados, setResiduosSelecionados] = useState<number[]>([]);
 
@@ -58,28 +72,6 @@ export default function CadastrarScreen() {
         buscarTiposDeResiduo();
     }, []);
 
-    const handleBuscarLocalizacao = async () => {
-        setBuscandoLocalizacao(true);
-        setLocalizacao(null);
-
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Permissão Negada', 'Para obter a localização atual, precisamos da sua permissão.');
-            setBuscandoLocalizacao(false);
-            return;
-        }
-
-        try {
-            const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-            setLocalizacao(location);
-        } catch (error) {
-            console.error("Erro ao buscar localização:", error);
-            Alert.alert('Erro', 'Não foi possível obter sua localização. Verifique se o GPS está ativado.');
-        } finally {
-            setBuscandoLocalizacao(false);
-        }
-    };
-
     const handleToggleResiduo = (id: number) => {
         setResiduosSelecionados(prev =>
             prev.includes(id) ? prev.filter(residuoId => residuoId !== id) : [...prev, id]
@@ -93,7 +85,6 @@ export default function CadastrarScreen() {
         setEmail('');
         setHorario('');
         setResiduosSelecionados([]);
-        setLocalizacao(null);
     };
 
     const handleCadastro = async () => {
@@ -101,6 +92,13 @@ export default function CadastrarScreen() {
         let url = '';
         let dadosParaApi: any = {};
         let nomeDoItem = '';
+
+        // --- MUDANÇA PRINCIPAL: Gerar coordenadas aleatórias a cada cadastro ---
+        const coordenadasAleatorias = generateRandomCoordinates();
+        const localizacaoParaApi = {
+            type: "Point",
+            coordinates: [coordenadasAleatorias.longitude, coordenadasAleatorias.latitude]
+        };
 
         switch (tipoCadastro) {
             case 'ponto':
@@ -116,11 +114,9 @@ export default function CadastrarScreen() {
                     telefone,
                     email,
                     horario_funcionamento: horario,
-                    tipos_residuos_aceitos: residuosSelecionados
+                    tipos_residuos_aceitos: residuosSelecionados,
+                    localizacao: localizacaoParaApi // Sempre envia a localização gerada
                 };
-                if (localizacao) {
-                    dadosParaApi.localizacao = { type: "Point", coordinates: [localizacao.coords.longitude, localizacao.coords.latitude] };
-                }
                 nomeDoItem = 'Ponto de Coleta';
                 break;
 
@@ -137,11 +133,9 @@ export default function CadastrarScreen() {
                     telefone,
                     email,
                     horario_funcionamento: horario,
-                    tipos_residuos_aceitos: residuosSelecionados
+                    tipos_residuos_aceitos: residuosSelecionados,
+                    localizacao: localizacaoParaApi // Sempre envia a localização gerada
                 };
-                if (localizacao) {
-                    dadosParaApi.localizacao = { type: "Point", coordinates: [localizacao.coords.longitude, localizacao.coords.latitude] };
-                }
                 nomeDoItem = 'Cooperativa';
                 break;
         }
@@ -207,23 +201,6 @@ export default function CadastrarScreen() {
                         );
                     })}
                 </View>
-
-                <Text style={[styles.label, { color: texto }]}>
-                    Localização (Opcional)
-                </Text>
-                <TouchableOpacity onPress={handleBuscarLocalizacao} style={styles.locationButton}>
-                    <Text style={styles.locationButtonText}>Obter Localização Atual</Text>
-                </TouchableOpacity>
-
-                <View style={styles.locationStatusBox}>
-                    {buscandoLocalizacao ? (
-                        <ActivityIndicator color="#2a9d8f" />
-                    ) : localizacao ? (
-                        <Text style={styles.locationStatusTextSuccess}>Localização obtida!</Text>
-                    ) : (
-                        <Text style={styles.locationStatusText}>Nenhuma localização informada.</Text>
-                    )}
-                </View>
             </>
         );
     };
@@ -260,152 +237,25 @@ export default function CadastrarScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    scrollContentContainer: {
-        alignItems: 'center',
-        paddingVertical: height * 0.05,
-        paddingHorizontal: width * 0.05,
-    },
-    logo: {
-        width: width * 0.25,
-        height: width * 0.25,
-        resizeMode: 'contain',
-    },
-    headerContainer: {
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: height * 0.02,
-        marginTop: height * 0.01,
-    },
-    title: {
-        fontSize: width * 0.07,
-        fontFamily: 'Poppins-Bold',
-        marginBottom: 5,
-    },
-    subtitle: {
-        fontSize: width * 0.035,
-        fontFamily: 'Poppins-Regular',
-    },
-    tabContainer: {
-        width: '100%',
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginBottom: height * 0.04,
-    },
-    tabButton: {
-        flex: 1,
-        paddingVertical: 12,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 10,
-        alignItems: 'center',
-        marginHorizontal: 5,
-    },
-    tabButtonSelected: {
-        backgroundColor: '#2a9d8f',
-    },
-    tabButtonText: {
-        fontFamily: 'Poppins-SemiBold',
-        color: '#555',
-        fontSize: width * 0.035,
-    },
-    tabButtonTextSelected: {
-        color: '#fff',
-    },
-    label: {
-        width: '100%',
-        fontFamily: 'Poppins-SemiBold',
-        fontSize: width * 0.04,
-        marginBottom: height * 0.01,
-    },
-    input: {
-        backgroundColor: '#f0f0f0',
-        width: '100%',
-        borderRadius: 10,
-        paddingVertical: height * 0.015,
-        paddingHorizontal: width * 0.04,
-        fontFamily: 'Poppins-Regular',
-        fontSize: width * 0.04,
-        color: '#333',
-        marginBottom: height * 0.02,
-    },
-    residuosContainer: {
-        width: '100%',
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginBottom: height * 0.02,
-    },
-    residuoButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 14,
-        borderRadius: 20,
-        backgroundColor: '#e0e0e0',
-        marginRight: 10,
-        marginBottom: 10,
-    },
-    residuoButtonSelected: {
-        backgroundColor: '#2a9d8f',
-    },
-    residuoButtonText: {
-        fontFamily: 'Poppins-Regular',
-        color: '#333',
-    },
-    residuoButtonTextSelected: {
-        color: '#fff',
-    },
-    locationButton: {
-        backgroundColor: '#eaf4f4',
-        borderColor: '#2a9d8f',
-        borderWidth: 1,
-        borderRadius: 10,
-        paddingVertical: 12,
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    locationButtonText: {
-        color: '#2a9d8f',
-        fontFamily: 'Poppins-SemiBold',
-        fontSize: width * 0.04,
-    },
-    locationStatusBox: {
-        backgroundColor: '#f0f0f0',
-        width: '100%',
-        borderRadius: 10,
-        paddingVertical: height * 0.015,
-        paddingHorizontal: width * 0.04,
-        marginBottom: height * 0.04,
-        alignItems: 'center',
-    },
-    locationStatusText: {
-        fontFamily: 'Poppins-Regular',
-        color: '#888',
-    },
-    locationStatusTextSuccess: {
-        fontFamily: 'Poppins-Regular',
-        color: '#2a9d8f',
-    },
-    locationStatusTextError: {
-        fontFamily: 'Poppins-Regular',
-        color: '#d9534f',
-    },
-    submitButton: {
-        width: '100%',
-        backgroundColor: '#2a9d8f',
-        borderRadius: 15,
-        paddingVertical: height * 0.02,
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 3,
-        shadowColor: '#2a9d8f',
-    },
-    submitButtonDisabled: {
-        backgroundColor: '#a9a9a9',
-    },
-    submitButtonText: {
-        fontFamily: 'Poppins-Bold',
-        color: '#fff',
-        fontSize: width * 0.045,
-    },
+    container: { flex: 1 },
+    scrollContentContainer: { alignItems: 'center', paddingVertical: height * 0.05, paddingHorizontal: width * 0.05 },
+    logo: { width: width * 0.25, height: width * 0.25, resizeMode: 'contain' },
+    headerContainer: { width: '100%', alignItems: 'center', marginBottom: height * 0.02, marginTop: height * 0.01 },
+    title: { fontSize: width * 0.07, fontFamily: 'Poppins-Bold', marginBottom: 5 },
+    subtitle: { fontSize: width * 0.035, fontFamily: 'Poppins-Regular' },
+    tabContainer: { width: '100%', flexDirection: 'row', justifyContent: 'space-around', marginBottom: height * 0.04 },
+    tabButton: { flex: 1, paddingVertical: 12, backgroundColor: '#f0f0f0', borderRadius: 10, alignItems: 'center', marginHorizontal: 5 },
+    tabButtonSelected: { backgroundColor: '#2a9d8f' },
+    tabButtonText: { fontFamily: 'Poppins-SemiBold', color: '#555', fontSize: width * 0.035 },
+    tabButtonTextSelected: { color: '#fff' },
+    label: { width: '100%', fontFamily: 'Poppins-SemiBold', fontSize: width * 0.04, marginBottom: height * 0.01 },
+    input: { backgroundColor: '#f0f0f0', width: '100%', borderRadius: 10, paddingVertical: height * 0.015, paddingHorizontal: width * 0.04, fontFamily: 'Poppins-Regular', fontSize: width * 0.04, color: '#333', marginBottom: height * 0.02 },
+    residuosContainer: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', marginBottom: height * 0.02 },
+    residuoButton: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#e0e0e0', marginRight: 10, marginBottom: 10 },
+    residuoButtonSelected: { backgroundColor: '#2a9d8f' },
+    residuoButtonText: { fontFamily: 'Poppins-Regular', color: '#333' },
+    residuoButtonTextSelected: { color: '#fff' },
+    submitButton: { width: '100%', backgroundColor: '#2a9d8f', borderRadius: 15, paddingVertical: height * 0.02, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#2a9d8f', marginTop: height * 0.02 },
+    submitButtonDisabled: { backgroundColor: '#a9a9a9' },
+    submitButtonText: { fontFamily: 'Poppins-Bold', color: '#fff', fontSize: width * 0.045 },
 });

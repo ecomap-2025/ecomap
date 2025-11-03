@@ -22,7 +22,7 @@ class CooperativaSerializer(serializers.ModelSerializer):
     tipos_residuos_aceitos = serializers.PrimaryKeyRelatedField(
         queryset=TipoResiduo.objects.all(),
         many=True,
-        required=False # Adicionado para garantir que seja opcional, caso necessário
+        required=False 
     )
 
     class Meta:
