@@ -1,9 +1,13 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
-import axios from 'axios'; // 1. Importar o axios
+import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+// <-- MUDANÇA: Importar Alert
+import { ActivityIndicator, Alert, Dimensions, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
+const API_BASE_URL = 'https://ecomap-api-013m.onrender.com/api';
+
+
 
 interface ApiTipoResiduo {
   id: number;
@@ -16,23 +20,44 @@ interface ApiPontoColeta {
   tipos_residuo: ApiTipoResiduo[];
 }
 
-interface Ponto {
+interface ApiCooperativa {
   id: number;
   nome: string;
-  tipos: string[]; 
+  tipos_residuo: ApiTipoResiduo[];
+}
+
+interface Ponto {
+  id: string; 
+  nome: string;
+  tipos: string[];
+  origem: 'ponto' | 'cooperativa';
 }
 
 
 function PesquisaInput({ onSearch }: { onSearch: (searchText: string) => void; }) {
   const [query, setQuery] = useState('');
-
+  const [tiposResiduosDisponiveis, setTiposResiduosDisponiveis] = useState<ApiTipoResiduo[]>([]);
+  
   const handleChange = (text: string) => {
     setQuery(text);
   };
-
   const handleSearch = () => {
     onSearch(query);
   };
+
+  useEffect(() => {
+    const buscarTiposDeResiduo = async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/tipos-residuo/`);
+            setTiposResiduosDisponiveis(response.data);
+        } catch (error) {
+            console.error("Erro ao buscar tipos de resíduo:", error);
+            Alert.alert('Erro', 'Não foi possível carregar a lista de tipos de resíduo.');
+        }
+    };
+
+    buscarTiposDeResiduo();
+}, []);
 
   return (
     <View style={{ width: '100%', marginBottom: height * 0.03 }}>
@@ -58,35 +83,51 @@ function PesquisaInput({ onSearch }: { onSearch: (searchText: string) => void; }
   );
 }
 
+// --- Tela Principal ---
+
 export default function IndexScreen() {
   const fundo = useThemeColor({}, 'background');
   const texto = useThemeColor({}, 'text');
   
   const [carregando, setCarregando] = useState(true);
-  const [todosOsPontos, setTodosOsPontos] = useState<Ponto[]>([]);
+  const [todosOsPontos, setTodosOsPontos] = useState<Ponto[]>([]); 
   const [pontosFiltrados, setPontosFiltrados] = useState<Ponto[]>([]);
 
   useEffect(() => {
-    const buscarPontos = async () => {
+    const buscarDados = async () => {
       try {
-        const response = await axios.get<ApiPontoColeta[]>('https://ecomap-api-013m.onrender.com/api/pontos-coleta/');
+        const [responsePontos, responseCoops] = await Promise.all([
+          axios.get<ApiPontoColeta[]>(`${API_BASE_URL}/pontos-coleta/`),
+          axios.get<ApiCooperativa[]>(`${API_BASE_URL}/cooperativas/`) 
+        ]);
         
-        const pontosFormatados = response.data.map(ponto => ({
-          id: ponto.id,
+        const pontosFormatados: Ponto[] = responsePontos.data.map(ponto => ({
+          id: `ponto-${ponto.id}`, // Cria ID único
           nome: ponto.nome,
           tipos: ponto.tipos_residuo.map(tipo => tipo.nome), 
+          origem: 'ponto',
         }));
 
-        setTodosOsPontos(pontosFormatados);
-        setPontosFiltrados(pontosFormatados); 
+        const coopsFormatadas: Ponto[] = responseCoops.data.map(coop => ({
+            id: `coop-${coop.id}`, // Cria ID único
+            nome: coop.nome,
+            tipos: coop.tipos_residuo.map(tipo => tipo.nome),
+            origem: 'cooperativa',
+        }));
+
+        const dadosCombinados = [...pontosFormatados, ...coopsFormatadas];
+
+        setTodosOsPontos(dadosCombinados);
+        setPontosFiltrados(dadosCombinados); 
       } catch (error) {
-        console.error("Erro ao buscar pontos de coleta:", error);
+        console.error("Erro ao buscar dados:", error);
+        Alert.alert('Erro', 'Não foi possível carregar os pontos de coleta e cooperativas.');
       } finally {
         setCarregando(false);
       }
     };
 
-    buscarPontos();
+    buscarDados();
   }, []); 
 
   const handleSearchSubmit = (searchText: string) => {
@@ -133,7 +174,12 @@ export default function IndexScreen() {
           pontosFiltrados.map(ponto => (
             <View key={ponto.id} style={{ width: '100%', backgroundColor: '#fff', padding: 15, borderRadius: 10, marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.2, shadowRadius: 1.41 }}>
               <Text style={{ fontSize: width * 0.045, fontFamily: 'Poppins-SemiBold', color: '#232323' }}>{ponto.nome}</Text>
-              <Text style={{ fontSize: width * 0.035, fontFamily: 'Poppins-Regular', color: '#555', marginTop: 4 }}>Aceita: {ponto.tipos.join(', ')}</Text>
+              
+              <Text style={{ fontSize: width * 0.03, fontFamily: 'Poppins-Medium', color: ponto.origem === 'ponto' ? '#007BFF' : '#28a745', marginTop: 2, textTransform: 'uppercase' }}>
+                {ponto.origem === 'ponto' ? 'Ponto de Coleta' : 'Cooperativa'}
+              </Text>
+
+              <Text style={{ fontSize: width * 0.035, fontFamily: 'Poppins-Regular', color: '#555', marginTop: 8 }}>Aceita: {ponto.tipos.join(', ')}</Text>
             </View>
           ))
         ) : (
