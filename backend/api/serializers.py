@@ -23,14 +23,12 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos')
         localizacao_data = validated_data.pop('localizacao', None)
 
-        ponto_coleta = PontoColeta.objects.create(**validated_data)
-
-        ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
-
         if localizacao_data:
-            ponto_coleta.localizacao = Point(localizacao_data['coordinates'])
-            ponto_coleta.save()
+            validated_data['localizacao'] = Point(localizacao_data['coordinates'])
 
+        ponto_coleta = PontoColeta.objects.create(**validated_data)
+        ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
+        
         return ponto_coleta
 
 class CooperativaSerializer(serializers.ModelSerializer):
