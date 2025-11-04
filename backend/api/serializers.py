@@ -20,19 +20,21 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         fields = ['id', 'nome', 'endereco', 'telefone', 'email', 'horario_funcionamento', 'localizacao', 'tipos_residuos_aceitos']
 
     def create(self, validated_data):
+        # 1. Remova APENAS os campos M2M (many-to-many)
         tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos')
-        localizacao_data = validated_data.pop('localizacao', None)
-
+        
+        # 2. NÃO FAÇA O .pop() da 'localizacao'. Deixe ela em validated_data.
+        #    O GeoFeatureModelSerializer vai cuidar dela automaticamente.
         ponto_coleta = PontoColeta.objects.create(**validated_data)
+        
+        # 3. Configure o campo M2M
         ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
-
-        if localizacao_data:
-            ponto_coleta.localizacao = Point(localizacao_data['coordinates'])
-            ponto_coleta.save()
 
         return ponto_coleta
 
-class CooperativaSerializer(serializers.ModelSerializer):
+# --- CORREÇÃO APLICADA AQUI ---
+# 1. Mudei a classe base para 'GeoFeatureModelSerializer'
+class CooperativaSerializer(GeoFeatureModelSerializer):
     tipos_residuos_aceitos = serializers.PrimaryKeyRelatedField(
         queryset=TipoResiduo.objects.all(),
         many=True,
@@ -41,19 +43,17 @@ class CooperativaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Cooperativa
+        geo_field = "localizacao" # 2. Adicionei o 'geo_field'
         fields = ['id', 'nome', 'responsavel', 'telefone', 'email', 'endereco', 'localizacao', 'tipos_residuos_aceitos']
     
     def create(self, validated_data):
+        # 3. Remova APENAS o campo M2M
         tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos', None)
-        localizacao_data = validated_data.pop('localizacao', None)
-
+        
+        # 4. NÃO FAÇA O .pop() da 'localizacao'. Deixe ela em validated_data.
         cooperativa = Cooperativa.objects.create(**validated_data)
 
         if tipos_residuos_data is not None:
             cooperativa.tipos_residuos_aceitos.set(tipos_residuos_data)
         
-        if localizacao_data:
-            cooperativa.localizacao = Point(localizacao_data['coordinates'])
-            cooperativa.save()
-
         return cooperativa

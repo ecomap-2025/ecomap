@@ -41,13 +41,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django.contrib.gis', #Adiciona GeoDjango
-
+    'django.contrib.gis',
     'rest_framework',
+    'rest_framework_gis', 
     'corsheaders',
     'drf_yasg',
-
-    'api', # App
+    'api'
 ]
 
 MIDDLEWARE = [

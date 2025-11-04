@@ -50,17 +50,15 @@ export default function InicioScreen() {
         const location = await Location.getCurrentPositionAsync({});
         const { latitude, longitude } = location.coords;
 
-        const response = await axios.get<ApiPontoColeta[]>(
-          `https://ecomap-api-013m.onrender.com/api/pontos-coleta/?lat=${latitude}&lon=${longitude}`
-        );
-        const pontosDeColeta = response.data;
-
-        if (!Array.isArray(pontosDeColeta)) {
-            console.error("A resposta da API não é um array:", pontosDeColeta);
-            throw new Error("Formato de dados inesperado da API.");
+      const response = await axios.get(`https://ecomap-api-013m.onrender.com/api/pontos-coleta/?lat=${latitude}&lon=${longitude}`);
+      const responseData = response.data;
+        if (typeof responseData !== 'object' || responseData === null || !Array.isArray(responseData.features)) {
+        console.error("A resposta da API não é um FeatureCollection válido:", responseData);
+        throw new Error("Formato de dados inesperado da API.");
         }
 
-        const highlightsData = pontosDeColeta.slice(0, 3).map(ponto => ({
+        const pontosDeColeta: ApiPontoColeta[] = responseData.features.map((feature: any) => feature.properties);
+          const highlightsData = pontosDeColeta.slice(0, 3).map(ponto => ({
           id: String(ponto.id),
           title: ponto.nome,
           image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9AmtWnHFWNPj9eoa86FLKkapHDXwJGOaXMA&s',
