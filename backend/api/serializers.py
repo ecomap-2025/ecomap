@@ -20,16 +20,22 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         fields = ['id', 'nome', 'endereco', 'telefone', 'email', 'horario_funcionamento', 'localizacao', 'tipos_residuos_aceitos']
 
     def create(self, validated_data):
-        # 1. Remova APENAS os campos M2M (many-to-many)
-        tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos')
-        
-        # 2. NÃO FAÇA O .pop() da 'localizacao'. Deixe ela em validated_data.
-        #    O GeoFeatureModelSerializer vai cuidar dela automaticamente.
-        ponto_coleta = PontoColeta.objects.create(**validated_data)
-        
-        # 3. Configure o campo M2M
-        ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
+        tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos', [])
+        localizacao_data = validated_data.get('localizacao')
 
+        # Se o campo veio como string (ex: "-46.625290, -23.533773")
+        if isinstance(localizacao_data, str):
+            try:
+                lon, lat = map(float, localizacao_data.split(','))
+                validated_data['localizacao'] = Point(lon, lat)
+            except Exception:
+                raise serializers.ValidationError(
+                    "Formato inválido. Use 'longitude, latitude' (ex: -46.625290, -23.533773)"
+                )
+
+        ponto_coleta = PontoColeta.objects.create(**validated_data)
+        ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
+        
         return ponto_coleta
 
 # --- CORREÇÃO APLICADA AQUI ---
