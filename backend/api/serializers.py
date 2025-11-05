@@ -21,7 +21,8 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
 
     def to_internal_value(self, data):
         #Converte 'localizacao' no formato de string "lon, lat" em Point antes da validação.
-        
+
+        data = data.copy()
         localizacao = data.get('localizacao')
 
         # Se veio como string (ex: "-46.625290, -23.533773")
