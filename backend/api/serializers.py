@@ -19,24 +19,29 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         geo_field = "localizacao"
         fields = ['id', 'nome', 'endereco', 'telefone', 'email', 'horario_funcionamento', 'localizacao', 'tipos_residuos_aceitos']
 
+    def to_internal_value(self, data):
+        #Converte 'localizacao' no formato de string "lon, lat" em Point antes da validação.
+        
+        localizacao = data.get('localizacao')
+
+        # Se veio como string (ex: "-46.625290, -23.533773")
+        if isinstance(localizacao, str) and ',' in localizacao:
+            try:
+                lon, lat = map(float, localizacao.split(','))
+                data['localizacao'] = Point(lon, lat)
+            except ValueError:
+                raise serializers.ValidationError({
+                    'localizacao': "Formato inválido. Use 'longitude, latitude'."
+                })
+
+        return super().to_internal_value(data)
+
     def create(self, validated_data):
         tipos_residuos_data = validated_data.pop('tipos_residuos_aceitos', [])
-        localizacao_data = validated_data.get('localizacao')
-
-        # Se o campo veio como string (ex: "-46.625290, -23.533773")
-        if isinstance(localizacao_data, str):
-            try:
-                lon, lat = map(float, localizacao_data.split(','))
-                validated_data['localizacao'] = Point(lon, lat)
-            except Exception:
-                raise serializers.ValidationError(
-                    "Formato inválido. Use 'longitude, latitude' (ex: -46.625290, -23.533773)"
-                )
-
-        ponto_coleta = PontoColeta.objects.create(**validated_data)
-        ponto_coleta.tipos_residuos_aceitos.set(tipos_residuos_data)
+        ponto = PontoColeta.objects.create(**validated_data)
+        ponto.tipos_residuos_aceitos.set(tipos_residuos_data)
         
-        return ponto_coleta
+        return ponto
 
 # --- CORREÇÃO APLICADA AQUI ---
 # 1. Mudei a classe base para 'GeoFeatureModelSerializer'
