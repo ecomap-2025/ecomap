@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('nome', models.CharField(help_text="Nome do tipo de resíduo, ex: 'Pilhas'", max_length=100, unique=True)),
                 ('descricao', models.TextField(blank=True, help_text='Breve descrição sobre o descarte correto deste item')),
-                ('eh_reciclavel', models.BooleanField(default=True, help_text='Marque se esse item é comumente reciclável')),
+                ('reciclavel', models.BooleanField(default=True, help_text='Marque se esse item é comumente reciclável')),
             ],
             options={
                 'verbose_name': 'Tipo de Resíduo',

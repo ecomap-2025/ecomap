@@ -24,6 +24,7 @@ const residuos = `${API_BASE_URL}/tipos-residuo/`;
 interface ApiTipoResiduo {
   id: number;
   nome: string;
+  reciclavel: boolean;
 }
 
 interface ApiCooperativa {

@@ -24,7 +24,7 @@ type TipoCadastro = 'ponto' | 'cooperativa';
 interface TipoResiduo {
   id: number;
   nome: string;
-  eh_reciclavel: boolean;
+  reciclavel: boolean;
 }
 
 export default function CadastrarScreen() {
