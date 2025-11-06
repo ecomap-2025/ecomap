@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'api',
     'rest_framework',
     'rest_framework_gis',
-    'django_cors_headers',
+    'corsheaders',
     'drf_yasg',
     'whitenoise', # O whitenoise também precisa estar aqui
 ]
