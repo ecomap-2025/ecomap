@@ -40,17 +40,20 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
+    'django.contrib.staticfiles',  # <-- GARANTA QUE ESTA LINHA EXISTA (UMA ÚNICA VEZ)
     'django.contrib.gis',
+
+    # Seus outros apps
+    'api',
     'rest_framework',
-    'rest_framework_gis', 
-    'corsheaders',
+    'rest_framework_gis',
+    'django_cors_headers',
     'drf_yasg',
-    'whitenoise',
-    'api'
-
-
+    'whitenoise', # O whitenoise também precisa estar aqui
 ]
+
+
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
