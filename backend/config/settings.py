@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',  # <-- GARANTA QUE ESTA LINHA EXISTA (UMA ÚNICA VEZ)
+    'django.contrib.staticfiles',
     'django.contrib.gis',
 
     # Seus outros apps
@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'rest_framework_gis',
     'corsheaders',
     'drf_yasg',
-    'whitenoise', # O whitenoise também precisa estar aqui
+    'whitenoise',
 ]
 
 
