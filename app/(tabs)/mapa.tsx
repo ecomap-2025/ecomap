@@ -1,237 +1,309 @@
+// import React, { useEffect, useState } from 'react';
+// import { StyleSheet, Text, View } from 'react-native';
+// // Importamos o 'Region' para tipar nosso estado de região
+// import * as Location from 'expo-location';
+// import MapView, { Marker, Region, UrlTile } from 'react-native-maps';
+// // Importamos os tipos específicos do 'expo-location'
+// import { LocationObject, PermissionStatus } from 'expo-location';
+
+// // --- 1. DEFINIÇÃO DE TIPOS (A principal mudança TSX) ---
+
+// // Definimos os 'tipos' literais que nossos lugares podem ter
+// type LugarTipo = 'restaurante' | 'padaria' | 'loja' | 'outro';
+
+// // Criamos uma interface para o objeto 'Lugar'
+// interface Lugar {
+//   id: number;
+//   nome: string;
+//   coords: {
+//     latitude: number;
+//     longitude: number;
+//   };
+//   tipo: LugarTipo;
+// }
+
+// // --- NOSSOS DADOS FICTÍCIOS (Agora tipados) ---
+// // Note o 'as const' em 'outro' para manter o tipo literal
+// const meusLugares: Lugar[] = [
+//   {
+//     id: 1,
+//     nome: 'Restaurante da Praça',
+//     coords: { latitude: -19.917299, longitude: -43.937813 },
+//     tipo: 'restaurante',
+//   },
+//   {
+//     id: 2,
+//     nome: 'Padaria Pão Quente',
+//     coords: { latitude: -19.921000, longitude: -43.938000 },
+//     tipo: 'padaria',
+//   },
+//   {
+//     id: 3,
+//     nome: 'Loja de Calçados',
+//     coords: { latitude: -19.919500, longitude: -43.939000 },
+//     tipo: 'loja',
+//   },
+//   {
+//     id: 4,
+//     nome: 'Banca de Jornal',
+//     coords: { latitude: -19.918000, longitude: -43.937000 },
+//     tipo: 'outro', // <--- Tipo 'outro'
+//   },
+// ];
+
+// const osmTileUrl = "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png";
+
+// // --- Funções de Ajuda (Agora tipadas) ---
+
+// // O parâmetro 'tipo' agora é do tipo 'LugarTipo'
+// const getMarkerColor = (tipo: LugarTipo): string => {
+//   switch (tipo) {
+//     case 'restaurante': return '#E67E22'; // Laranja
+//     case 'padaria': return '#F1C40F'; // Amarelo
+//     case 'loja': return '#3498DB'; // Azul
+//     default: return '#95A5A6'; // Cinza (para 'outro')
+//   }
+// };
+
+// // O parâmetro 'tipo' também é 'LugarTipo'
+// const getMarkerLetter = (tipo: LugarTipo): string => {
+//   switch (tipo) {
+//     case 'restaurante': return 'R';
+//     case 'padaria': return 'P';
+//     case 'loja': return 'L';
+//     default: return '📍';
+//   }
+// };
+
+// // --- Componente Principal ---
+
+// export default function App() {
+//   // --- 2. ESTADOS TIPADOS ---
+//   const [initialRegion, setInitialRegion] = useState<Region | null>(null);
+//   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+//   useEffect(() => {
+//     (async () => {
+//       // Pedir permissão
+//       let { status } = await Location.requestForegroundPermissionsAsync();
+      
+//       // Usamos o Enum 'PermissionStatus' para checagem de tipo
+//       if (status !== PermissionStatus.GRANTED) {
+//         setErrorMsg('Permissão de localização negada.');
+//         // Define uma região inicial padrão se a permissão for negada
+//         setInitialRegion({
+//           latitude: -19.917299,
+//           longitude: -43.937813,
+//           latitudeDelta: 0.0922,
+//           longitudeDelta: 0.0421,
+//         });
+//         return;
+//       }
+
+//       // Pegar a localização (tipada como 'LocationObject')
+//       let location: LocationObject = await Location.getCurrentPositionAsync({});
+      
+//       setInitialRegion({
+//         latitude: location.coords.latitude,
+//         longitude: location.coords.longitude,
+//         latitudeDelta: 0.0922,
+//         longitudeDelta: 0.0421,
+//       });
+//     })();
+//   }, []);
+
+//   // --- Renderização condicional ---
+//   if (errorMsg) {
+//     return (
+//       <View style={styles.container}>
+//         <Text>{errorMsg}</Text>
+//       </View>
+//     );
+//   }
+
+//   if (!initialRegion) {
+//     return (
+//       <View style={styles.container}>
+//         <Text>Carregando mapa...</Text>
+//       </View>
+//     );
+//   }
+
+//   // --- Renderização do Mapa ---
+//   return (
+//     <View style={styles.container}>
+//       <MapView
+//         style={styles.map}
+//         initialRegion={initialRegion}
+//         showsUserLocation={true} // O "ponto azul" do usuário
+//       >
+//         {/* O mapa base do OpenStreetMap */}
+//         <UrlTile
+//           urlTemplate={osmTileUrl}
+//           maximumZ={19}
+//         />
+
+//         {/* --- 3. MARCADORES TEMPORÁRIOS CUSTOMIZADOS --- */}
+//         {/* Graças ao TS, 'lugar' aqui é automaticamente 'Lugar' */}
+//         {meusLugares.map(lugar => {
+//           const cor = getMarkerColor(lugar.tipo);
+//           const letra = getMarkerLetter(lugar.tipo);
+
+//           return (
+//             <Marker
+//               key={lugar.id}
+//               coordinate={lugar.coords}
+//               title={lugar.nome}
+//             >
+//               {/* Aqui começa a customização visual */}
+//               <View style={[styles.markerContainer, { backgroundColor: cor }]}>
+//                 <Text style={styles.markerText}>{letra}</Text>
+//               </View>
+//               {/* Um "triângulo" para apontar para o local exato */}
+//               <View style={[styles.markerTriangle, { borderTopColor: cor }]} />
+//             </Marker>
+//           );
+//         })}
+//       </MapView>
+//     </View>
+//   );
+// }
+
+// // --- ESTILOS ---
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   map: {
+//     ...StyleSheet.absoluteFillObject,
+//   },
+//   markerContainer: {
+//     width: 30,
+//     height: 30,
+//     borderRadius: 15, // Círculo perfeito
+//     justifyContent: 'center',
+//     alignItems: 'center',
+//     elevation: 5, // Sombra para Android
+//     shadowColor: '#000', // Sombra para iOS
+//     shadowOffset: { width: 0, height: 2 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 2,
+//   },
+//   markerText: {
+//     color: 'white',
+//     fontWeight: 'bold',
+//     fontSize: 16,
+//   },
+//   markerTriangle: {
+//     // Truque de CSS/RN para fazer um triângulo
+//     width: 0,
+//     height: 0,
+//     backgroundColor: 'transparent',
+//     borderStyle: 'solid',
+//     borderLeftWidth: 6,
+//     borderRightWidth: 6,
+//     borderTopWidth: 10,
+//     borderLeftColor: 'transparent',
+//     borderRightColor: 'transparent',
+//     alignSelf: 'center',
+//     marginTop: -2, // "Gruda" na parte de baixo do círculo
+//   },
+// });
+
+
+
 import { useThemeColor } from '@/hooks/use-theme-color';
-import axios from 'axios';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
-} from 'react-native';
+import { Dimensions, Image, Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
-const API_BASE_URL = 'https://ecomap-api-013m.onrender.com/api';
 
-type TipoCadastro = 'ponto' | 'cooperativa';
+export default function IndexScreen() {
+  const fundo = useThemeColor({}, 'background');
+  const texto = useThemeColor({}, 'text');
+  const laranja = useThemeColor({}, 'primary');
 
-interface TipoResiduo {
-    id: number;
-    nome: string;
-    reciclavel: boolean;
+  const router = useRouter();
+
+  const styles = StyleSheet.create({
+    container: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: height * 0.05,
+      backgroundColor: fundo,
+    },
+    logo: {
+      width: width * 0.35,
+      height: width * 0.35,
+      marginBottom: 24,
+      resizeMode: 'contain',
+    },
+    welcomeText: {
+      fontSize: width * 0.05,
+      fontFamily: 'Poppins-Regular',
+      marginBottom: 5,
+      color: texto,
+    },
+    appName: {
+      fontSize: width * 0.12,
+      fontFamily: 'Poppins-Bold',
+      marginBottom: 24,
+      textAlign: 'center',
+      color: texto,
+    },
+    image: {
+      width: width * 0.7,
+      height: width * 0.7,
+      marginBottom: 24,
+      resizeMode: 'contain',
+    },
+    button: {
+      marginTop: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 60,
+      borderRadius: 12,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowRadius: 6,
+      elevation: 6,
+      backgroundColor: laranja,
+      opacity: 1,
+      shadowOpacity: 0.35,
+    },
+    buttonPressed: {
+      opacity: 0.7,
+      shadowOpacity: 0.2,
+    },
+    buttonText: {
+      fontSize: width * 0.045,
+      fontFamily: 'Poppins-SemiBold',
+      color: '#fff',
+    },
+  });
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Image source={require('@/assets/imgs/logo.png')} style={styles.logo} />
+      
+      <Text style={styles.welcomeText}>Bem-vindo(a) ao</Text>
+      <Text style={styles.appName}>EcoMap</Text>
+      
+      <Image source={require('@/assets/imgs/imagem.png')} style={styles.image} />
+      
+      <Pressable
+        style={({ pressed }) => [
+          styles.button,
+          pressed && styles.buttonPressed,
+        ]}
+        onPress={() => router.push('/(tabs)')}
+      >
+        <Text style={styles.buttonText}>COMEÇAR</Text>
+      </Pressable>
+
+    </ScrollView>
+  );
 }
-
-export default function CadastrarScreen() {
-    const fundo = useThemeColor({}, 'background');
-    const texto = useThemeColor({}, 'text');
-    const router = useRouter();
-
-    const [tipoCadastro, setTipoCadastro] = useState<TipoCadastro>('ponto');
-    const [nome, setNome] = useState('');
-    const [endereco, setEndereco] = useState('');
-    const [telefone, setTelefone] = useState('');
-    const [email, setEmail] = useState('');
-    const [horario, setHorario] = useState('');
-    const [enviando, setEnviando] = useState(false);
-    const [tiposResiduosDisponiveis, setTiposResiduosDisponiveis] = useState<TipoResiduo[]>([]);
-    const [residuosSelecionados, setResiduosSelecionados] = useState<number[]>([]);
-
-    useEffect(() => {
-        const buscarTiposDeResiduo = async () => {
-            try {
-                const response = await axios.get(`${API_BASE_URL}/tipos-residuo/`);
-                setTiposResiduosDisponiveis(response.data);
-            } catch (error) {
-                console.error("Erro ao buscar tipos de resíduo:", error);
-                Alert.alert('Erro', 'Não foi possível carregar a lista de tipos de resíduo.');
-            }
-        };
-
-        buscarTiposDeResiduo();
-    }, []);
-
-    const handleToggleResiduo = (id: number) => {
-        setResiduosSelecionados(prev =>
-            prev.includes(id) ? prev.filter(residuoId => residuoId !== id) : [...prev, id]
-        );
-    };
-
-    const resetarFormulario = () => {
-        setNome('');
-        setEndereco('');
-        setTelefone('');
-        setEmail('');
-        setHorario('');
-        setResiduosSelecionados([]);
-    };
-
-    const handleCadastro = async () => {
-        setEnviando(true);
-        let url = '';
-        let dadosParaApi: any = {};
-        let nomeDoItem = '';
-
-        switch (tipoCadastro) {
-            case 'ponto':
-                if (!nome || !endereco || residuosSelecionados.length === 0) {
-                    Alert.alert('Atenção', 'Nome, Endereço e ao menos um Tipo de Resíduo são obrigatórios.');
-                    setEnviando(false);
-                    return;
-                }
-                url = `${API_BASE_URL}/pontos-coleta/`;
-                dadosParaApi = {
-                    nome,
-                    endereco,
-                    telefone,
-                    email,
-                    horario_funcionamento: horario,
-                    tipos_residuos_aceitos: residuosSelecionados,
-                    localizacao: null // --- ENVIANDO NULL ---
-                };
-                nomeDoItem = 'Ponto de Coleta';
-                break;
-
-            case 'cooperativa':
-                if (!nome || residuosSelecionados.length === 0) {
-                    Alert.alert('Atenção', 'Nome e ao menos um Tipo de Resíduo são obrigatórios.');
-                    setEnviando(false);
-                    return;
-                }
-                url = `${API_BASE_URL}/cooperativas/`;
-                dadosParaApi = {
-                    nome,
-                    endereco,
-                    telefone,
-                    email,
-                    horario_funcionamento: horario,
-                    tipos_residuos_aceitos: residuosSelecionados,
-                    localizacao: null
-                };
-                nomeDoItem = 'Cooperativa';
-                break;
-        }
-
-        try {
-            await axios.post(url, dadosParaApi);
-            Alert.alert('Sucesso!', `${nomeDoItem} cadastrado(a) com sucesso. Aguardando aprovação.`);
-            resetarFormulario();
-            router.back();
-        } catch (error) {
-            let mensagemErro = `Não foi possível cadastrar. Tente novamente.`;
-            if (axios.isAxiosError(error) && error.response) {
-                console.error("Erro de API:", JSON.stringify(error.response.data, null, 2));
-                const detalhesErro = Object.values(error.response.data).flat().join('\n');
-                if (detalhesErro) mensagemErro = `Erro: \n${detalhesErro}`;
-            } else {
-                console.error("Erro desconhecido:", error);
-            }
-            Alert.alert('Erro', mensagemErro);
-        } finally {
-            setEnviando(false);
-        }
-    };
-
-    const BotaoSelecao = ({ tipo, label }: { tipo: TipoCadastro, label: string }) => {
-        const isSelected = tipoCadastro === tipo;
-        return (
-            <TouchableOpacity
-                onPress={() => setTipoCadastro(tipo)}
-                style={[styles.tabButton, isSelected && styles.tabButtonSelected]}
-            >
-                <Text style={[styles.tabButtonText, isSelected && styles.tabButtonTextSelected]}>{label}</Text>
-            </TouchableOpacity>
-        );
-    };
-
-    const renderFormulario = () => {
-        return (
-            <>
-                <Text style={[styles.label, { color: texto }]}>Nome*</Text>
-                <TextInput value={nome} onChangeText={setNome} placeholder={tipoCadastro === 'ponto' ? "Nome do Ecoponto" : "Nome da Cooperativa"} placeholderTextColor="#888" style={styles.input} />
-
-                <Text style={[styles.label, { color: texto }]}>Endereço {tipoCadastro === 'ponto' ? '*' : '(Opcional)'}</Text>
-                <TextInput value={endereco} onChangeText={setEndereco} placeholder="Rua, número, bairro e cidade" placeholderTextColor="#888" style={styles.input} />
-
-                <Text style={[styles.label, { color: texto }]}>Telefone (Opcional)</Text>
-                <TextInput value={telefone} onChangeText={setTelefone} placeholder="(31) 99999-9999" keyboardType="phone-pad" style={styles.input} />
-
-                <Text style={[styles.label, { color: texto }]}>E-mail (Opcional)</Text>
-                <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" placeholder="contato@exemplo.com" keyboardType="email-address" style={styles.input} />
-
-                <Text style={[styles.label, { color: texto }]}>Horário de Funcionamento (Opcional)</Text>
-                <TextInput value={horario} onChangeText={setHorario} placeholder="Seg a Sex, 08:00 - 18:00" style={styles.input} />
-
-                <Text style={[styles.label, { color: texto }]}>Tipos de Resíduos Aceitos*</Text>
-                <View style={styles.residuosContainer}>
-                    {tiposResiduosDisponiveis.map(residuo => {
-                        const isSelected = residuosSelecionados.includes(residuo.id);
-                        return (
-                            <TouchableOpacity key={residuo.id} onPress={() => handleToggleResiduo(residuo.id)} style={[styles.residuoButton, isSelected && styles.residuoButtonSelected]}>
-                                <Text style={[styles.residuoButtonText, isSelected && styles.residuoButtonTextSelected]}>{residuo.nome}</Text>
-                            </TouchableOpacity>
-                        );
-                    })}
-                </View>
-            </>
-        );
-    };
-
-    return (
-        <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={[styles.container, { backgroundColor: fundo }]}
-            contentContainerStyle={styles.scrollContentContainer}
-        >
-            <Image source={require('@/assets/imgs/logo.png')} style={styles.logo} />
-
-            <View style={styles.headerContainer}>
-                <Text style={[styles.title, { color: texto }]}>CADASTRAR</Text>
-                <Text style={[styles.subtitle, { color: texto }]}>Selecione o que você deseja adicionar:</Text>
-            </View>
-
-            <View style={styles.tabContainer}>
-                <BotaoSelecao tipo="ponto" label="Ponto de Coleta" />
-                <BotaoSelecao tipo="cooperativa" label="Cooperativa" />
-            </View>
-
-            {renderFormulario()}
-
-            <TouchableOpacity
-                disabled={enviando}
-                onPress={handleCadastro}
-                style={[styles.submitButton, enviando && styles.submitButtonDisabled]}
-            >
-                {enviando ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Confirmar Cadastro</Text>}
-            </TouchableOpacity>
-        </ScrollView>
-    );
-}
-
-const styles = StyleSheet.create({
-    container: { flex: 1 },
-    scrollContentContainer: { alignItems: 'center', paddingVertical: height * 0.05, paddingHorizontal: width * 0.05 },
-    logo: { width: width * 0.25, height: width * 0.25, resizeMode: 'contain' },
-    headerContainer: { width: '100%', alignItems: 'center', marginBottom: height * 0.02, marginTop: height * 0.01 },
-    title: { fontSize: width * 0.07, fontFamily: 'Poppins-Bold', marginBottom: 5 },
-    subtitle: { fontSize: width * 0.035, fontFamily: 'Poppins-Regular' },
-    tabContainer: { width: '100%', flexDirection: 'row', justifyContent: 'space-around', marginBottom: height * 0.04 },
-    tabButton: { flex: 1, paddingVertical: 12, backgroundColor: '#f0f0f0', borderRadius: 10, alignItems: 'center', marginHorizontal: 5 },
-    tabButtonSelected: { backgroundColor: '#2a9d8f' },
-    tabButtonText: { fontFamily: 'Poppins-SemiBold', color: '#555', fontSize: width * 0.035 },
-    tabButtonTextSelected: { color: '#fff' },
-    label: { width: '100%', fontFamily: 'Poppins-SemiBold', fontSize: width * 0.04, marginBottom: height * 0.01 },
-    input: { backgroundColor: '#f0f0f0', width: '100%', borderRadius: 10, paddingVertical: height * 0.015, paddingHorizontal: width * 0.04, fontFamily: 'Poppins-Regular', fontSize: width * 0.04, color: '#333', marginBottom: height * 0.02 },
-    residuosContainer: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', marginBottom: height * 0.02 },
-    residuoButton: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, backgroundColor: '#e0e0e0', marginRight: 10, marginBottom: 10 },
-    residuoButtonSelected: { backgroundColor: '#2a9d8f' },
-    residuoButtonText: { fontFamily: 'Poppins-Regular', color: '#333' },
-    residuoButtonTextSelected: { color: '#fff' },
-    submitButton: { width: '100%', backgroundColor: '#2a9d8f', borderRadius: 15, paddingVertical: height * 0.02, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#2a9d8f', marginTop: height * 0.02 },
-    submitButtonDisabled: { backgroundColor: '#a9a9a9' },
-    submitButtonText: { fontFamily: 'Poppins-Bold', color: '#fff', fontSize: width * 0.045 },
-});

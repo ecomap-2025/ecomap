@@ -1,6 +1,5 @@
 import { useThemeColor } from '@/hooks/use-theme-color';
 import axios from 'axios';
-import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -9,23 +8,27 @@ interface ApiPontoColeta {
   id: number;
   nome: string;
   endereco: string;
-  distancia?: number; 
+  distancia?: number;
 }
 
 interface HighlightItem {
   id: string;
   title: string;
-  image: string;
-}
-
-interface NearbyItem {
-  id: string;
-  title: string;
-  category: string;
-  distance: string;
 }
 
 const { width, height } = Dimensions.get('window');
+
+function shuffleArray(array: any[]) {
+  let currentIndex = array.length, randomIndex;
+
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
 
 export default function InicioScreen() {
   const fundo = useThemeColor({}, 'background');
@@ -33,46 +36,142 @@ export default function InicioScreen() {
   const router = useRouter();
 
   const [highlights, setHighlights] = useState<HighlightItem[]>([]);
-  const [nearbyPlaces, setNearbyPlaces] = useState<NearbyItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const styles = StyleSheet.create({
+    centerContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: fundo,
+    },
+    loadingText: {
+      marginTop: 15,
+      fontFamily: 'Poppins-Regular',
+      color: texto,
+    },
+    scrollView: {
+      backgroundColor: fundo,
+    },
+    scrollContainer: {
+      alignItems: 'center',
+      paddingVertical: height * 0.05,
+      paddingHorizontal: width * 0.05,
+    },
+    logoContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    logo: {
+      width: width * 0.25,
+      height: width * 0.25,
+      resizeMode: 'contain',
+    },
+    welcomeContainer: {
+      width: '100%',
+      alignItems: 'center',
+      marginBottom: height * 0.03,
+    },
+    title: {
+      fontSize: width * 0.07,
+      fontFamily: 'Poppins-Bold',
+      color: texto,
+    },
+    subtitle: {
+      textAlign:'center',
+      alignItems:'center',
+      fontSize: width * 0.04,
+      fontFamily: 'Poppins-Regular',
+      color: texto,
+    },
+    searchBar: {
+      width: '100%',
+      backgroundColor: '#f0f0f0',
+      borderRadius: 15,
+      paddingVertical: height * 0.015,
+      paddingHorizontal: width * 0.04,
+      marginBottom: height * 0.03,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    searchIcon: {
+      width: width * 0.05,
+      height: width * 0.05,
+      tintColor: '#888',
+      marginRight: width * 0.03,
+    },
+    searchText: {
+      fontFamily: 'Poppins-Regular',
+      color: '#888',
+      fontSize: width * 0.04,
+    },
+    sectionContainer: {
+      width: '100%',
+      marginBottom: height * 0.03,
+    },
+    sectionTitle: {
+      fontSize: width * 0.06,
+      fontFamily: 'Poppins-SemiBold',
+      marginBottom: height * 0.02,
+      color: texto,
+    },
+    highlightCard: {
+      backgroundColor: '#fff',
+      borderRadius: 10,
+      padding: width * 0.04,
+      marginBottom: height * 0.015,
+      flexDirection: 'row',
+      alignItems: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOpacity: 0.05,
+      shadowRadius: 5,
+    },
+    highlightTitle: {
+      fontFamily: 'Poppins-SemiBold',
+      fontSize: width * 0.04,
+      color: '#333',
+    },
+  });
 
   useEffect(() => {
     const inicializarTela = async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert(
-            'Permissão Necessária',
-            'Para encontrar locais próximos, por favor, habilite o serviço de localização.'
-          );
-        }
+        const BASE_URL = 'https://ecomap-api-013m.onrender.com/api';
+        const pontosUrl = `${BASE_URL}/pontos-coleta/`;
+        const cooperativasUrl = `${BASE_URL}/cooperativas/`;
 
-        const location = await Location.getCurrentPositionAsync({});
-        const { latitude, longitude } = location.coords;
+        const [pontosResult, cooperativasResult] = await Promise.allSettled([
+          axios.get(pontosUrl),
+          axios.get(cooperativasUrl)
+        ]);
 
-      const response = await axios.get(`https://ecomap-api-013m.onrender.com/api/pontos-coleta/?lat=${latitude}&lon=${longitude}`);
-      const responseData = response.data;
-        if (typeof responseData !== 'object' || responseData === null || !Array.isArray(responseData.features)) {
-        console.error("A resposta da API não é um FeatureCollection válido:", responseData);
-        throw new Error("Formato de dados inesperado da API.");
-        }
+        const extractFeatures = (result: PromiseSettledResult<any>): ApiPontoColeta[] => {
+          if (result.status === 'rejected') {
+            console.error("Erro ao buscar dados:", result.reason?.message);
+            return [];
+          }
+          const responseData = result.value.data;
+          if (typeof responseData === 'object' && responseData !== null && Array.isArray(responseData.features)) {
+            return responseData.features.map((feature: any) => feature.properties);
+          }
+          console.error("A resposta da API não é um FeatureCollection válido:", responseData);
+          return [];
+        };
 
-        const pontosDeColeta: ApiPontoColeta[] = responseData.features.map((feature: any) => feature.properties);
-          const highlightsData = pontosDeColeta.slice(0, 3).map(ponto => ({
+        const pontosDeColeta = extractFeatures(pontosResult);
+        const cooperativas = extractFeatures(cooperativasResult);
+        let todosOsLocais = [...pontosDeColeta, ...cooperativas];
+        todosOsLocais = shuffleArray(todosOsLocais);
+
+        const highlightsData = todosOsLocais.slice(0, 8).map(ponto => ({
           id: String(ponto.id),
           title: ponto.nome,
-          image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT9AmtWnHFWNPj9eoa86FLKkapHDXwJGOaXMA&s',
         }));
 
-        const nearbyData = pontosDeColeta.slice(0, 6).map(ponto => ({
-          id: String(ponto.id),
-          title: ponto.nome,
-          category: 'Vários materiais',
-          distance: ponto.distancia ? `${ponto.distancia.toFixed(1)}km` : '...',
-        }));
-        
         setHighlights(highlightsData);
-        setNearbyPlaces(nearbyData);
 
       } catch (error) {
         console.error("Erro ao inicializar a tela:", error);
@@ -81,15 +180,15 @@ export default function InicioScreen() {
         setLoading(false);
       }
     };
-    
+
     inicializarTela();
-  }, []); 
+  }, []);
 
   if (loading) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: fundo }]}>
+      <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={texto} />
-        <Text style={[styles.loadingText, { color: texto }]}>
+        <Text style={styles.loadingText}>
           Carregando informações...
         </Text>
       </View>
@@ -97,18 +196,18 @@ export default function InicioScreen() {
   }
 
   return (
-    <ScrollView 
-        showsVerticalScrollIndicator={false} 
-        style={{ backgroundColor: fundo }} 
-        contentContainerStyle={styles.scrollContainer}
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      style={styles.scrollView}
+      contentContainerStyle={styles.scrollContainer}
     >
       <View style={styles.logoContainer}>
         <Image source={require('@/assets/imgs/logo.png')} style={styles.logo} />
       </View>
 
       <View style={styles.welcomeContainer}>
-        <Text style={[styles.title, { color: texto }]}>Olá!</Text>
-        <Text style={[styles.subtitle, { color: texto }]}>Seja bem-vindo(a) ao EcoMap!</Text>
+        <Text style={styles.title}>Olá!</Text>
+        <Text style={styles.subtitle}>Encontre os pontos de coleta mais próximos e faça sua parte na sustentabilidade.</Text>
       </View>
 
       <TouchableOpacity style={styles.searchBar} onPress={() => router.push('/(tabs)/pesquisa')}>
@@ -117,50 +216,17 @@ export default function InicioScreen() {
       </TouchableOpacity>
 
       <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: texto }]}>Destaques</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {highlights.map(item => (
-            <TouchableOpacity key={item.id} style={styles.highlightCard}>
-              <Image source={{ uri: item.image }} style={styles.highlightImage} />
-              <Text style={[styles.highlightTitle, { color: texto }]}>{item.title}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
+        <Text style={styles.sectionTitle}>Destaques</Text>
 
-      <View style={styles.sectionContainer}>
-        <Text style={[styles.sectionTitle, { color: texto }]}>Perto de Você</Text>
-        {nearbyPlaces.map(item => (
-          <TouchableOpacity key={item.id} style={styles.nearbyCard}>
+        {highlights.map(item => (
+          <TouchableOpacity key={item.id} style={styles.highlightCard}>
             <View>
-              <Text style={styles.nearbyTitle}>{item.title}</Text>
-              <Text style={styles.nearbyInfo}>{item.category} • {item.distance}</Text>
+              <Text style={styles.highlightTitle}>{item.title}</Text>
             </View>
           </TouchableOpacity>
         ))}
       </View>
+
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 15, fontFamily: 'Poppins-Regular' },
-  scrollContainer: { alignItems: 'center', paddingVertical: height * 0.05, paddingHorizontal: width * 0.05 },
-  logoContainer: { width: '100%', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
-  logo: { width: width * 0.25, height: width * 0.25, resizeMode: 'contain' },
-  welcomeContainer: { width: '100%', alignItems: 'center', marginBottom: height * 0.03 },
-  title: { fontSize: width * 0.07, fontFamily: 'Poppins-Bold' },
-  subtitle: { fontSize: width * 0.04, fontFamily: 'Poppins-Regular' },
-  searchBar: { width: '100%', backgroundColor: '#f0f0f0', borderRadius: 15, paddingVertical: height * 0.015, paddingHorizontal: width * 0.04, marginBottom: height * 0.03, flexDirection: 'row', alignItems: 'center' },
-  searchIcon: { width: width * 0.05, height: width * 0.05, tintColor: '#888', marginRight: width * 0.03 },
-  searchText: { fontFamily: 'Poppins-Regular', color: '#888', fontSize: width * 0.04 },
-  sectionContainer: { width: '100%', marginBottom: height * 0.03 },
-  sectionTitle: { fontSize: width * 0.06, fontFamily: 'Poppins-SemiBold', marginBottom: height * 0.02 },
-  highlightCard: { width: width * 0.4, marginRight: width * 0.04 },
-  highlightImage: { width: '100%', height: width * 0.4, borderRadius: 15, marginBottom: height * 0.01 },
-  highlightTitle: { fontFamily: 'Poppins-SemiBold', fontSize: width * 0.035 },
-  nearbyCard: { backgroundColor: '#fff', borderRadius: 10, padding: width * 0.04, marginBottom: height * 0.015, flexDirection: 'row', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 },
-  nearbyTitle: { fontFamily: 'Poppins-SemiBold', fontSize: width * 0.04, color: '#333' },
-  nearbyInfo: { fontFamily: 'Poppins-Regular', color: '#777', fontSize: width * 0.03 },
-});
