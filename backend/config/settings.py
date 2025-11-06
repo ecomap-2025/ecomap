@@ -46,7 +46,11 @@ INSTALLED_APPS = [
     'rest_framework_gis', 
     'corsheaders',
     'drf_yasg',
+    'django_cors_headers',
+    'whitenoise',
     'api'
+
+
 ]
 
 MIDDLEWARE = [
