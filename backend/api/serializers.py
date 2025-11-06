@@ -11,7 +11,7 @@ class TipoResiduoSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = TipoResiduo
-        fields = ['id', 'nome', 'descricao']
+        fields = ['id', 'nome', 'descricao', 'eh_reciclavel']
 
 class PontoColetaSerializer(GeoFeatureModelSerializer):
     """

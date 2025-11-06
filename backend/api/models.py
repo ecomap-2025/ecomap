@@ -3,7 +3,7 @@ from django.contrib.gis.db import models
 class TipoResiduo(models.Model): # Categoria de itens que podem ser descartados.
     nome = models.CharField(max_length=100, unique=True, help_text="Nome do tipo de resíduo, ex: 'Pilhas'")
     descricao = models.TextField(blank=True, help_text="Breve descrição sobre o descarte correto deste item")
-    reciclavel = models.BooleanField(default=True, help_text="Marque se esse item é comumente reciclável")
+    eh_reciclavel = models.BooleanField(default=True, help_text="Marque se esse item é comumente reciclável")
 
     class Meta:
         verbose_name = "Tipo de Resíduo"
