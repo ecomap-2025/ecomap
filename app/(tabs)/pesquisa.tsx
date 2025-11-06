@@ -159,20 +159,21 @@ export default function IndexScreen() {
       setCarregando(true);
       try {
         const [responseTipos, responsePontos, responseCoops] = await Promise.all([
-          axios.get<any>(`${API_BASE_URL}/tipos-residuo/`),
+          // Usamos a interface que você já definiu
+          axios.get<ApiTipoResiduo[]>(`${API_BASE_URL}/tipos-residuo/`), 
           axios.get<any>(`${API_BASE_URL}/pontos-coleta/`),
           axios.get<any>(`${API_BASE_URL}/cooperativas/`)
         ]);
+        const dadosTipos: ApiTipoResiduo[] = responseTipos.data;
 
-        const dadosTiposFeatures: GeoJSONFeature[] = responseTipos.data.features;
-        if (!Array.isArray(dadosTiposFeatures)) {
-          throw new Error("Formato de dados inesperado (tipos-residuo não tem 'features')");
+        if (!Array.isArray(dadosTipos)) {
+          throw new Error("Formato de dados inesperado (tipos-residuo não é um array)");
         }
 
         const tiposMap = new Map(
-          dadosTiposFeatures.map((feature: any) => [
-            feature.properties.id,
-            feature.properties.nome
+          dadosTipos.map(tipo => [
+            tipo.id,
+            tipo.nome
           ])
         );
         setTiposResiduoMap(tiposMap);
@@ -344,15 +345,16 @@ export default function IndexScreen() {
     },
     cardTypeBase: {
       fontSize: width * 0.03,
-      fontFamily: 'Poppins-Medium',
+      fontFamily: 'Poppins-Regular',
       marginTop: 2,
       textTransform: 'uppercase',
     },
     cardTypePonto: {
-      color: '#007BFF',
+      color: '#2a6f4e',
     },
     cardTypeCoop: {
-      color: '#28a745',
+      color: '#2a6f4e',
+      fontFamily: 'Poppins-Regular',
     },
     cardAccepts: {
       fontSize: width * 0.035,
