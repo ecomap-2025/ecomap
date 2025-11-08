@@ -1,5 +1,3 @@
-# api/serializers.py
-
 from rest_framework import serializers
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 from django.contrib.gis.geos import Point
@@ -34,7 +32,6 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         fields = [
             'id', 'nome', 'endereco', 'telefone', 'email',
             'horario_funcionamento', 'tipos_residuos_aceitos',
-            # --- CORREÇÃO AQUI ---
             # Adiciona os campos de escrita à lista de campos:
             'latitude', 'longitude', 'tipos_residuos_aceitos_ids'
         ]
@@ -44,11 +41,19 @@ class PontoColetaSerializer(GeoFeatureModelSerializer):
         lat = validated_data.pop('latitude')
         lon = validated_data.pop('longitude')
         residuos_ids = validated_data.pop('tipos_residuos_aceitos_ids', [])
+        
+        # --- CORREÇÃO CRÍTICA ADICIONADA AQUI ---
+        # Remove a chave 'localizacao' que o GeoSerializer pode ter 
+        # processado automaticamente. Isso evita o erro de "múltiplos valores".
+        validated_data.pop('localizacao', None) 
+        
         localizacao_point = Point(lon, lat, srid=4326)
+        
         ponto = PontoColeta.objects.create(
-            localizacao=localizacao_point,
+            localizacao=localizacao_point, # Agora este é o ÚNICO
             **validated_data
         )
+        
         if residuos_ids:
             ponto.tipos_residuos_aceitos.set(residuos_ids)
         return ponto
@@ -68,7 +73,6 @@ class CooperativaSerializer(GeoFeatureModelSerializer):
         fields = [
             'id', 'nome', 'responsavel', 'telefone', 'email', 'endereco',
             'status_cadastro',
-            # --- CORREÇÃO AQUI ---
             # Adiciona os campos de escrita à lista de campos:
             'latitude', 'longitude'
         ]
@@ -77,9 +81,16 @@ class CooperativaSerializer(GeoFeatureModelSerializer):
     def create(self, validated_data):
         lat = validated_data.pop('latitude')
         lon = validated_data.pop('longitude')
+        
+        # --- CORREÇÃO CRÍTICA ADICIONADA AQUI ---
+        # Remove a chave 'localizacao' que o GeoSerializer pode ter 
+        # processado automaticamente. Isso evita o erro de "múltiplos valores".
+        validated_data.pop('localizacao', None)
+        
         localizacao_point = Point(lon, lat, srid=4326)
+        
         cooperativa = Cooperativa.objects.create(
-            localizacao=localizacao_point,
+            localizacao=localizacao_point, # Agora este é o ÚNICO
             **validated_data
         )
         return cooperativa

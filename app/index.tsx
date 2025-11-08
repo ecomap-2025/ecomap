@@ -8,7 +8,6 @@ export default function IndexScreen() {
   const fundo = useThemeColor({}, 'background');
   const texto = useThemeColor({}, 'text');
   const laranja = useThemeColor({}, 'primary');
-
   const router = useRouter();
 
   const styles = StyleSheet.create({
@@ -72,12 +71,9 @@ export default function IndexScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Image source={require('@/assets/imgs/logo.png')} style={styles.logo} />
-      
       <Text style={styles.welcomeText}>Bem-vindo(a) ao</Text>
       <Text style={styles.appName}>EcoMap</Text>
-      
       <Image source={require('@/assets/imgs/imagem.png')} style={styles.image} />
-      
       <Pressable
         style={({ pressed }) => [
           styles.button,
@@ -87,7 +83,6 @@ export default function IndexScreen() {
       >
         <Text style={styles.buttonText}>COMEÇAR</Text>
       </Pressable>
-
     </ScrollView>
   );
 }
