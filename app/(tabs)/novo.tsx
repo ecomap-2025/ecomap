@@ -1,8 +1,8 @@
-import { useThemeColor } from '@/hooks/use-theme-color';
-import axios from 'axios';
-import * as Location from 'expo-location';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useThemeColor } from '@/hooks/use-theme-color'
+import axios from 'axios'
+import * as Location from 'expo-location'
+import { useRouter } from 'expo-router'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
@@ -14,53 +14,51 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-} from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+} from 'react-native'
+import MapView, { Marker } from 'react-native-maps'
 
-const { width, height } = Dimensions.get('window');
-const API_BASE_URL = 'https://ecomap-api-013m.onrender.com/api';
+const { width, height } = Dimensions.get('window')
+const API_BASE_URL = 'https://ecomap-api-013m.onrender.com/api'
 
-type TipoCadastro = 'ponto' | 'cooperativa';
+type TipoCadastro = 'ponto' | 'cooperativa'
 
 interface TipoResiduo {
-  id: number;
-  nome: string;
-  reciclavel: boolean;
+  id: number
+  nome: string
+  reciclavel: boolean
 }
 
 interface Coordenadas {
-  latitude: number;
-  longitude: number;
+  latitude: number
+  longitude: number
 }
 
 export default function CadastrarScreen() {
-  const fundo = useThemeColor({}, 'background');
-  const texto = useThemeColor({}, 'text');
-  const router = useRouter();
-
-  const [tipoCadastro, setTipoCadastro] = useState<TipoCadastro>('ponto');
-  const [nome, setNome] = useState('');
-  const [endereco, setEndereco] = useState('');
-  const [telefone, setTelefone] = useState('');
-  const [email, setEmail] = useState('');
-  const [horario, setHorario] = useState('');
-  const [enviando, setEnviando] = useState(false);
-  const [tiposResiduosDisponiveis, setTiposResiduosDisponiveis] = useState<TipoResiduo[]>([]);
-  const [residuosSelecionados, setResiduosSelecionados] = useState<number[]>([]);
-  const [marcadorCoords, setMarcadorCoords] = useState<Coordenadas | null>(null);
+  const fundo = useThemeColor({}, 'background')
+  const texto = useThemeColor({}, 'text')
+  const router = useRouter()
+  const mapRef = useRef<MapView>(null)
+  const [tipoCadastro, setTipoCadastro] = useState<TipoCadastro>('ponto')
+  const [nome, setNome] = useState('')
+  const [responsavel, setResponsavel] = useState('')
+  const [endereco, setEndereco] = useState('')
+  const [telefone, setTelefone] = useState('')
+  const [email, setEmail] = useState('')
+  const [horario, setHorario] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [tiposResiduosDisponiveis, setTiposResiduosDisponiveis] = useState<TipoResiduo[]>([])
+  const [residuosSelecionados, setResiduosSelecionados] = useState<number[]>([])
+  const [marcadorCoords, setMarcadorCoords] = useState<Coordenadas | null>(null)
   const [regiaoInicial, setRegiaoInicial] = useState({
     latitude: -19.8988,
     longitude: -44.0522,
     latitudeDelta: 0.0922,
     longitudeDelta: 0.0421,
-  });
-  const [permissaoLocalizacao, setPermissaoLocalizacao] = useState(false);
+  })
+  const [permissaoLocalizacao, setPermissaoLocalizacao] = useState(false)
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: fundo,
-    },
+    container: { flex: 1, backgroundColor: fundo },
     scrollContentContainer: {
       alignItems: 'center',
       paddingVertical: height * 0.05,
@@ -80,7 +78,6 @@ export default function CadastrarScreen() {
     title: {
       fontSize: width * 0.07,
       fontFamily: 'Poppins-Bold',
-      marginBottom: 5,
       color: texto,
     },
     subtitle: {
@@ -91,7 +88,6 @@ export default function CadastrarScreen() {
     tabContainer: {
       width: '100%',
       flexDirection: 'row',
-      justifyContent: 'space-around',
       marginBottom: height * 0.04,
     },
     tabButton: {
@@ -102,22 +98,17 @@ export default function CadastrarScreen() {
       alignItems: 'center',
       marginHorizontal: 5,
     },
-    tabButtonSelected: {
-      backgroundColor: '#2a9d8f',
-    },
+    tabButtonSelected: { backgroundColor: '#2A6F4E' },
     tabButtonText: {
       fontFamily: 'Poppins-SemiBold',
       color: '#555',
       fontSize: width * 0.035,
     },
-    tabButtonTextSelected: {
-      color: '#fff',
-    },
+    tabButtonTextSelected: { color: '#fff' },
     label: {
       width: '100%',
       fontFamily: 'Poppins-SemiBold',
       fontSize: width * 0.04,
-      marginBottom: height * 0.01,
       color: texto,
     },
     input: {
@@ -145,47 +136,43 @@ export default function CadastrarScreen() {
       marginRight: 10,
       marginBottom: 10,
     },
-    residuoButtonSelected: {
-      backgroundColor: '#2a9d8f',
-    },
-    residuoButtonText: {
-      fontFamily: 'Poppins-Regular',
-      color: '#333',
-    },
-    residuoButtonTextSelected: {
-      color: '#fff',
-    },
+    residuoButtonSelected: { backgroundColor: '#F7562C' },
+    residuoButtonText: { fontFamily: 'Poppins-Regular', color: '#333' },
+    residuoButtonTextSelected: { color: '#fff' },
     submitButton: {
-      width: '100%',
-      backgroundColor: '#2a9d8f',
+      backgroundColor: '#2A6F4E',
       borderRadius: 15,
       paddingVertical: height * 0.02,
       alignItems: 'center',
       justifyContent: 'center',
-      elevation: 3,
-      shadowColor: '#2a9d8f',
-      marginTop: height * 0.02,
+      shadowColor: '#2A6F4E',
+      width: '100%',
     },
-    submitButtonDisabled: {
-      backgroundColor: '#a9a9a9',
-    },
+    submitButtonDisabled: { backgroundColor: '#a9a9a9' },
     submitButtonText: {
       fontFamily: 'Poppins-Bold',
       color: '#fff',
-      fontSize: width * 0.045,
+      fontSize: width * 0.04,
+    },
+    searchButton: { width: '100%' },
+    searchButtonText: {
+      width: '100%',
+      fontSize: height * 0.02,
+      color: '#F58A23',
+      textAlign: 'center',
+      textDecorationLine: 'underline',
+      marginBottom: 10,
     },
     mapContainer: {
       width: '100%',
       height: height * 0.3,
       borderRadius: 10,
       overflow: 'hidden',
+      marginTop: height * 0.02,
       marginBottom: height * 0.02,
       backgroundColor: '#e0e0e0',
     },
-    map: {
-      width: '100%',
-      height: '100%',
-    },
+    map: { width: '100%', height: '100%' },
     mapLabel: {
       width: '100%',
       fontFamily: 'Poppins-Regular',
@@ -194,162 +181,163 @@ export default function CadastrarScreen() {
       textAlign: 'center',
       marginBottom: height * 0.02,
     },
-  });
+  })
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
+    ;(async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync()
       if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Para centrar o mapa, precisamos da sua localização.');
-        setPermissaoLocalizacao(false);
-        return;
+        Alert.alert('Permissão negada', 'Para centrar o mapa, precisamos da sua localização.')
+        setPermissaoLocalizacao(false)
+        return
       }
-
-      setPermissaoLocalizacao(true);
-
+      setPermissaoLocalizacao(true)
       try {
-        let location = await Location.getCurrentPositionAsync({});
+        let location = await Location.getCurrentPositionAsync({})
         setRegiaoInicial({
           latitude: location.coords.latitude,
           longitude: location.coords.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
-        });
+        })
       } catch (error) {
-        console.warn('Erro ao pegar localização inicial:', error);
+        console.warn('Erro ao pegar localização inicial:', error)
       }
-    })();
-  }, []);
+    })()
+  }, [])
 
   useEffect(() => {
     const buscarTiposDeResiduo = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/tipos-residuo/`);
-        if (response.data && Array.isArray(response.data.features)) {
-          const tipos = response.data.features.map((feature: any) => feature.properties);
-          setTiposResiduosDisponiveis(tipos);
-        } else if (response.data && Array.isArray(response.data.results)) {
-          setTiposResiduosDisponiveis(response.data.results);
-        } else if (Array.isArray(response.data)) {
-          setTiposResiduosDisponiveis(response.data);
+        const response = await axios.get(`${API_BASE_URL}/tipos-residuo/`)
+        if (Array.isArray(response.data)) {
+          setTiposResiduosDisponiveis(response.data)
         } else {
-          throw new Error('Formato de resposta inesperado.');
+          throw new Error('Formato de resposta inesperado.')
         }
       } catch (error) {
-        console.error('Erro ao buscar tipos de resíduo:', error);
-        Alert.alert('Erro', 'Não foi possível carregar a lista de tipos de resíduo.');
+        console.error('Erro ao buscar tipos de resíduo:', error)
+        Alert.alert('Erro', 'Não foi possível carregar a lista de tipos de resíduo.')
       }
-    };
-    buscarTiposDeResiduo();
-  }, []);
+    }
+    buscarTiposDeResiduo()
+  }, [])
+
+  const handleBuscarEndereco = async () => {
+    if (!endereco) return
+    try {
+      const localizacoes = await Location.geocodeAsync(endereco)
+      if (localizacoes && localizacoes.length > 0) {
+        const { latitude, longitude } = localizacoes[0]
+        setMarcadorCoords({ latitude, longitude })
+        mapRef.current?.animateToRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        })
+      } else {
+        Alert.alert('Erro', 'Endereço não encontrado.')
+      }
+    } catch {
+      Alert.alert('Erro', 'Não foi possível buscar o endereço.')
+    }
+  }
 
   const handleToggleResiduo = (id: number) => {
     setResiduosSelecionados(prev =>
-      prev.includes(id)
-        ? prev.filter(residuoId => residuoId !== id)
-        : [...prev, id]
-    );
-  };
+      prev.includes(id) ? prev.filter(residuoId => residuoId !== id) : [...prev, id]
+    )
+  }
 
   const resetarFormulario = () => {
-    setNome('');
-    setEndereco('');
-    setTelefone('');
-    setEmail('');
-    setHorario('');
-    setResiduosSelecionados([]);
-    setMarcadorCoords(null);
-  };
+    setNome('')
+    setEndereco('')
+    setTelefone('')
+    setEmail('')
+    setHorario('')
+    setResiduosSelecionados([])
+    setMarcadorCoords(null)
+  }
 
   const handleCadastro = async () => {
-    setEnviando(true);
-    let url = '';
-    let dadosParaApi: any = {};
-    let nomeDoItem = '';
+    setEnviando(true)
+    let url = ''
+    let dadosParaApi: any = {}
+    let nomeDoItem = ''
+    const msgErroObrigatorios = 'Nome e Endereço são obrigatórios.'
 
-    const msgErroObrigatorios = 'Nome, Endereço e ao menos um Tipo de Resíduo são obrigatórios.';
-
-    if (!nome || !endereco || residuosSelecionados.length === 0) {
-      Alert.alert('Atenção', msgErroObrigatorios);
-      setEnviando(false);
-      return;
+    if (!nome || !endereco) {
+      Alert.alert('Atenção', msgErroObrigatorios)
+      setEnviando(false)
+      return
     }
 
     if (!marcadorCoords) {
-      Alert.alert('Atenção', 'Por favor, marque o local exato no mapa.');
-      setEnviando(false);
-      return;
+      Alert.alert('Atenção', 'Por favor, marque o local exato no mapa.')
+      setEnviando(false)
+      return
     }
 
     switch (tipoCadastro) {
       case 'ponto':
-        url = `${API_BASE_URL}/pontos-coleta/`;
+        url = `${API_BASE_URL}/pontos-coleta/`
         dadosParaApi = {
           nome,
           endereco,
           telefone: telefone || null,
           email: email || null,
           horario_funcionamento: horario || null,
-          tipos_residuos_aceitos: residuosSelecionados,
+          tipos_residuos_aceitos_ids: residuosSelecionados,
           latitude: marcadorCoords.latitude,
           longitude: marcadorCoords.longitude,
           localizacao: {
             type: 'Point',
             coordinates: [marcadorCoords.longitude, marcadorCoords.latitude],
           },
-        };
-
-        nomeDoItem = 'Ponto de Coleta';
-        break;
+        }
+        nomeDoItem = 'Ponto de Coleta'
+        break
 
       case 'cooperativa':
-        url = `${API_BASE_URL}/cooperativas/`;
+        url = `${API_BASE_URL}/cooperativas/`
         dadosParaApi = {
           nome,
           endereco,
+          responsavel,
           telefone: telefone || null,
           email: email || null,
           horario_funcionamento: horario || null,
-          tipos_residuos_aceitos: residuosSelecionados,
           latitude: marcadorCoords.latitude,
           longitude: marcadorCoords.longitude,
           localizacao: {
             type: 'Point',
             coordinates: [marcadorCoords.longitude, marcadorCoords.latitude],
           },
-        };
-        nomeDoItem = 'Cooperativa';
-        break;
+        }
+        nomeDoItem = 'Cooperativa'
+        break
     }
 
     try {
-      await axios.post(url, dadosParaApi);
-      Alert.alert('Sucesso!', `${nomeDoItem} cadastrado(a) com sucesso.`);
-      resetarFormulario();
-      router.back();
+      await axios.post(url, dadosParaApi)
+      Alert.alert('Sucesso!', `${nomeDoItem} cadastrado(a) com sucesso.`)
+      resetarFormulario()
+      router.back()
     } catch (error) {
-      let mensagemErro = 'Não foi possível cadastrar. Tente novamente.';
+      let mensagemErro = 'Não foi possível cadastrar. Tente novamente.'
       if (axios.isAxiosError(error) && error.response) {
-        console.error('Erro de API EcoMap:', JSON.stringify(error.response.data, null, 2));
-        const detalhesErro = Object.values(error.response.data).flat().join('\n');
-        if (detalhesErro) mensagemErro = `Erro: \n${detalhesErro}`;
-      } else {
-        console.error('Erro desconhecido:', error);
+        const detalhesErro = Object.values(error.response.data).flat().join('\n')
+        if (detalhesErro) mensagemErro = `Erro:\n${detalhesErro}`
       }
-      Alert.alert('Erro', mensagemErro);
+      Alert.alert('Erro', mensagemErro)
     } finally {
-      setEnviando(false);
+      setEnviando(false)
     }
-  };
+  }
 
-  const BotaoSelecao = ({
-    tipo,
-    label,
-  }: {
-    tipo: TipoCadastro;
-    label: string;
-  }) => {
-    const isSelected = tipoCadastro === tipo;
+  const BotaoSelecao = ({ tipo, label }: { tipo: TipoCadastro; label: string }) => {
+    const isSelected = tipoCadastro === tipo
     return (
       <TouchableOpacity
         onPress={() => setTipoCadastro(tipo)}
@@ -359,90 +347,108 @@ export default function CadastrarScreen() {
           {label}
         </Text>
       </TouchableOpacity>
-    );
-  };
+    )
+  }
 
-  const renderFormulario = () => {
-    return (
-      <>
-        <Text style={styles.label}>Nome*</Text>
-        <TextInput
-          value={nome}
-          onChangeText={setNome}
-          placeholder={tipoCadastro === 'ponto' ? 'Nome do Ecoponto' : 'Nome da Cooperativa'}
-          placeholderTextColor="#888"
-          style={styles.input}
-        />
+  const renderFormulario = () => (
+    <>
+      <Text style={styles.label}>Nome*</Text>
+      <TextInput
+        value={nome}
+        onChangeText={setNome}
+        placeholder={tipoCadastro === 'ponto' ? 'Nome do Ecoponto' : 'Nome da Cooperativa'}
+        placeholderTextColor="#888"
+        style={styles.input}
+      />
+      <Text style={styles.label}>Endereço*</Text>
+      <TextInput
+        value={endereco}
+        onChangeText={setEndereco}
+        placeholder="Rua, número, bairro e cidade"
+        placeholderTextColor="#888"
+        style={styles.input}
+      />
+      <Text style={styles.label}>Localização no Mapa*</Text>
+      <TouchableOpacity onPress={handleBuscarEndereco} style={styles.searchButton}>
+        <Text style={styles.searchButtonText}>Buscar Endereço no Mapa</Text>
+      </TouchableOpacity>
+      <View style={styles.mapContainer}>
+        <MapView
+          style={styles.map}
+          ref={mapRef}
+          initialRegion={regiaoInicial}
+          onPress={e => setMarcadorCoords(e.nativeEvent.coordinate)}
+          showsUserLocation={permissaoLocalizacao}
+        >
+          {marcadorCoords && <Marker coordinate={marcadorCoords} />}
+        </MapView>
+      </View>
+      <Text style={styles.label}>Telefone (Opcional)</Text>
+      <TextInput
+        value={telefone}
+        onChangeText={setTelefone}
+        placeholder="(31) 99999-9999"
+        placeholderTextColor="#888"
+        keyboardType="phone-pad"
+        style={styles.input}
+      />
+      <Text style={styles.label}>E-mail (Opcional)</Text>
+      <TextInput
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        placeholder="contato@exemplo.com"
+        placeholderTextColor="#888"
+        keyboardType="email-address"
+        style={styles.input}
+      />
 
-        <Text style={styles.label}>Endereço*</Text>
-        <TextInput
-          value={endereco}
-          onChangeText={setEndereco}
-          placeholder="Rua, número, bairro e cidade"
-          placeholderTextColor="#888"
-          style={styles.input}
-        />
+      {tipoCadastro === 'cooperativa' && (
+        <>
+          <Text style={styles.label}>Responsável*</Text>
+          <TextInput
+            value={responsavel}
+            onChangeText={setResponsavel}
+            placeholder="Nome do responsável"
+            placeholderTextColor="#888"
+            style={styles.input}
+          />
+        </>
+      )}
 
-        <Text style={styles.label}>Localização no Mapa*</Text>
-        <Text style={styles.mapLabel}>(Toque no mapa para definir a localização exata)</Text>
-        <View style={styles.mapContainer}>
-          <MapView
-            style={styles.map}
-            initialRegion={regiaoInicial}
-            onPress={e => setMarcadorCoords(e.nativeEvent.coordinate)}
-            showsUserLocation={permissaoLocalizacao}
-          >
-            {marcadorCoords && <Marker coordinate={marcadorCoords} />}
-          </MapView>
-        </View>
-
-        <Text style={styles.label}>Telefone (Opcional)</Text>
-        <TextInput
-          value={telefone}
-          onChangeText={setTelefone}
-          placeholder="(31) 99999-9999"
-          keyboardType="phone-pad"
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>E-mail (Opcional)</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          placeholder="contato@exemplo.com"
-          keyboardType="email-address"
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Horário de Funcionamento (Opcional)</Text>
-        <TextInput
-          value={horario}
-          onChangeText={setHorario}
-          placeholder="Seg a Sex, 08:00 - 18:00"
-          style={styles.input}
-        />
-
-        <Text style={styles.label}>Tipos de Resíduos Aceitos*</Text>
-        <View style={styles.residuosContainer}>
-          {tiposResiduosDisponiveis.map(residuo => {
-            const isSelected = residuosSelecionados.includes(residuo.id);
-            return (
-              <TouchableOpacity
-                key={residuo.id}
-                onPress={() => handleToggleResiduo(residuo.id)}
-                style={[styles.residuoButton, isSelected && styles.residuoButtonSelected]}
-              >
-                <Text style={[styles.residuoButtonText, isSelected && styles.residuoButtonTextSelected]}>
-                  {residuo.nome}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </>
-    );
-  };
+      <Text style={styles.label}>Horário de Funcionamento (Opcional)</Text>
+      <TextInput
+        value={horario}
+        onChangeText={setHorario}
+        placeholder="Seg a Sex, 08:00 - 18:00"
+        placeholderTextColor="#888"
+        style={styles.input}
+      />
+      {tipoCadastro === 'ponto' && (
+        <>
+          <Text style={styles.label}>Tipos de Resíduos Aceitos*</Text>
+          <View style={styles.residuosContainer}>
+            {tiposResiduosDisponiveis.map(residuo => {
+              const isSelected = residuosSelecionados.includes(residuo.id)
+              return (
+                <TouchableOpacity
+                  key={residuo.id}
+                  onPress={() => handleToggleResiduo(residuo.id)}
+                  style={[styles.residuoButton, isSelected && styles.residuoButtonSelected]}
+                >
+                  <Text
+                    style={[styles.residuoButtonText, isSelected && styles.residuoButtonTextSelected]}
+                  >
+                    {residuo.nome}
+                  </Text>
+                </TouchableOpacity>
+              )
+            })}
+          </View>
+        </>
+      )}
+    </>
+  )
 
   return (
     <ScrollView
@@ -473,5 +479,5 @@ export default function CadastrarScreen() {
         )}
       </TouchableOpacity>
     </ScrollView>
-  );
+  )
 }

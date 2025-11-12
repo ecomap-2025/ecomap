@@ -1,207 +1,222 @@
-import * as Location from 'expo-location';
-import { LocationObject, PermissionStatus } from 'expo-location';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import MapView, { Marker, Region, UrlTile } from 'react-native-maps';
+import { useThemeColor } from '@/hooks/use-theme-color'
+import axios from 'axios'
+import * as Location from 'expo-location'
+import { useLocalSearchParams } from 'expo-router'
+import React, { useEffect, useRef, useState } from 'react'
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps'
 
+const iconCooperativa = require('@/assets/imgs/icons/cooperativa.png')
+const iconPonto = require('@/assets/imgs/icons/ecoponto.png')
+const iconLocalizacao = require('@/assets/imgs/icons/local.png')
 
-type LugarTipo = 'restaurante' | 'padaria' | 'loja' | 'outro';
-
-interface Lugar {
-  id: number;
-  nome: string;
-  coords: {
-    latitude: number;
-    longitude: number;
-  };
-  tipo: LugarTipo;
+const icones = {
+  cooperativa: iconCooperativa,
+  ponto: iconPonto,
 }
 
-const meusLugares: Lugar[] = [
-  {
-    id: 1,
-    nome: 'Restaurante da Praça',
-    coords: { latitude: -19.917299, longitude: -43.937813 },
-    tipo: 'restaurante',
-  },
-  {
-    id: 2,
-    nome: 'Padaria Pão Quente',
-    coords: { latitude: -19.921000, longitude: -43.938000 },
-    tipo: 'padaria',
-  },
-  {
-    id: 3,
-    nome: 'Loja de Calçados',
-    coords: { latitude: -19.919500, longitude: -43.939000 },
-    tipo: 'loja',
-  },
-  {
-    id: 4,
-    nome: 'Banca de Jornal',
-    coords: { latitude: -19.918000, longitude: -43.937000 },
-    tipo: 'outro', // <--- Tipo 'outro'
-  },
-];
+interface Local {
+  id: number | string
+  nome: string
+  endereco: string
+  latitude: number
+  longitude: number
+  tipo: 'cooperativa' | 'ponto'
+}
 
-const osmTileUrl = "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png";
+export default function MapaScreen() {
+  const fundo = useThemeColor({}, 'background')
+  const texto = useThemeColor({}, 'text')
+  const { latitude, longitude } = useLocalSearchParams()
 
-// --- Funções de Ajuda (Agora tipadas) ---
-
-// O parâmetro 'tipo' agora é do tipo 'LugarTipo'
-const getMarkerColor = (tipo: LugarTipo): string => {
-  switch (tipo) {
-    case 'restaurante': return '#E67E22'; // Laranja
-    case 'padaria': return '#F1C40F'; // Amarelo
-    case 'loja': return '#3498DB'; // Azul
-    default: return '#95A5A6'; // Cinza (para 'outro')
-  }
-};
-
-// O parâmetro 'tipo' também é 'LugarTipo'
-const getMarkerLetter = (tipo: LugarTipo): string => {
-  switch (tipo) {
-    case 'restaurante': return 'R';
-    case 'padaria': return 'P';
-    case 'loja': return 'L';
-    default: return '📍';
-  }
-};
-
-// --- Componente Principal ---
-
-export default function App() {
-  // --- 2. ESTADOS TIPADOS ---
-  const [initialRegion, setInitialRegion] = useState<Region | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [locais, setLocais] = useState<Local[]>([])
+  const [loading, setLoading] = useState(true)
+  const mapRef = useRef<MapView>(null)
 
   useEffect(() => {
-    (async () => {
-      // Pedir permissão
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      
-      // Usamos o Enum 'PermissionStatus' para checagem de tipo
-      if (status !== PermissionStatus.GRANTED) {
-        setErrorMsg('Permissão de localização negada.');
-        // Define uma região inicial padrão se a permissão for negada
-        setInitialRegion({
-          latitude: -19.917299,
-          longitude: -43.937813,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
-        });
-        return;
+    const carregarLocais = async () => {
+      try {
+        const BASE_URL = 'https://ecomap-api-013m.onrender.com/api'
+        const [pontosRes, coopRes] = await Promise.all([
+          axios.get(`${BASE_URL}/pontos-coleta/`),
+          axios.get(`${BASE_URL}/cooperativas/`),
+        ])
+
+        const extrair = (res: any, tipo: 'cooperativa' | 'ponto') => {
+          if (!res.data?.features) return []
+          return res.data.features
+            .filter((f: any) => Array.isArray(f.geometry?.coordinates))
+            .map((f: any) => ({
+              id: f.id || Math.random(),
+              nome: f.properties?.nome || 'Sem nome',
+              endereco: f.properties?.endereco || 'Sem endereço',
+              latitude: Number(f.geometry.coordinates[1]),
+              longitude: Number(f.geometry.coordinates[0]),
+              tipo,
+            }))
+            .filter(
+              (l: { latitude: number; longitude: number }) =>
+                !isNaN(l.latitude) && !isNaN(l.longitude)
+            )
+        }
+
+        const pontos = extrair(pontosRes, 'ponto')
+        const cooperativas = extrair(coopRes, 'cooperativa')
+        setLocais([...pontos, ...cooperativas])
+      } catch (error) {
+        console.error(error)
+        Alert.alert('Erro', 'Não foi possível carregar os locais.')
+      } finally {
+        setLoading(false)
       }
+    }
 
-      // Pegar a localização (tipada como 'LocationObject')
-      let location: LocationObject = await Location.getCurrentPositionAsync({});
-      
-      setInitialRegion({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      });
-    })();
-  }, []);
+    carregarLocais()
+  }, [])
 
-  // --- Renderização condicional ---
-  if (errorMsg) {
-    return (
-      <View style={styles.container}>
-        <Text>{errorMsg}</Text>
-      </View>
-    );
+  useEffect(() => {
+    // Se latitude e longitude vierem da rota, centraliza o mapa nelas
+    if (latitude && longitude && mapRef.current) {
+      const lat = Number(latitude)
+      const lon = Number(longitude)
+      mapRef.current.animateToRegion({
+        latitude: lat,
+        longitude: lon,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      })
+    }
+  }, [latitude, longitude])
+
+  const buscarMinhaLocalizacao = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permissão negada', 'Não foi possível acessar sua localização.')
+      return
+    }
+
+    const local = await Location.getCurrentPositionAsync({})
+    mapRef.current?.animateToRegion({
+      latitude: local.coords.latitude,
+      longitude: local.coords.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    })
   }
 
-  if (!initialRegion) {
+  if (loading) {
     return (
-      <View style={styles.container}>
-        <Text>Carregando mapa...</Text>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={texto} />
+        <Text style={[styles.loading, { color: texto }]}>Carregando locais...</Text>
       </View>
-    );
+    )
   }
 
-  // --- Renderização do Mapa ---
   return (
-    <View style={styles.container}>
+    <View style={{ flex: 1 }}>
       <MapView
+        ref={mapRef}
         style={styles.map}
-        initialRegion={initialRegion}
-        showsUserLocation={true} // O "ponto azul" do usuário
+        provider={PROVIDER_DEFAULT}
+        showsUserLocation={true}
+        followsUserLocation={false}
+        showsMyLocationButton={false}
+        initialRegion={{
+          latitude: latitude ? Number(latitude) : -19.9208,
+          longitude: longitude ? Number(longitude) : -43.9378,
+          latitudeDelta: 0.1,
+          longitudeDelta: 0.1,
+        }}
       >
-        {/* O mapa base do OpenStreetMap */}
-        <UrlTile
-          urlTemplate={osmTileUrl}
-          maximumZ={19}
-        />
+        {locais.map(local => (
+          <Marker
+            key={local.id}
+            coordinate={{ latitude: local.latitude, longitude: local.longitude }}
+            title={local.nome}
+            description={local.endereco}
+          >
+            <Image
+              source={icones[local.tipo]}
+              style={styles.markerIcon}
+              resizeMode="contain"
+            />
+          </Marker>
+        ))}
 
-        {/* --- 3. MARCADORES TEMPORÁRIOS CUSTOMIZADOS --- */}
-        {/* Graças ao TS, 'lugar' aqui é automaticamente 'Lugar' */}
-        {meusLugares.map(lugar => {
-          const cor = getMarkerColor(lugar.tipo);
-          const letra = getMarkerLetter(lugar.tipo);
-
-          return (
-            <Marker
-              key={lugar.id}
-              coordinate={lugar.coords}
-              title={lugar.nome}
-            >
-              {/* Aqui começa a customização visual */}
-              <View style={[styles.markerContainer, { backgroundColor: cor }]}>
-                <Text style={styles.markerText}>{letra}</Text>
-              </View>
-              {/* Um "triângulo" para apontar para o local exato */}
-              <View style={[styles.markerTriangle, { borderTopColor: cor }]} />
-            </Marker>
-          );
-        })}
+        {/* Se veio ponto específico da rota, adiciona marcador especial */}
+        {latitude && longitude && (
+          <Marker
+            coordinate={{
+              latitude: Number(latitude),
+              longitude: Number(longitude),
+            }}
+            title="Destino selecionado"
+          >
+            <Image
+              source={require('@/assets/imgs/icons/destino.png')}
+              style={{ width: 50, height: 50 }}
+              resizeMode="contain"
+            />
+          </Marker>
+        )}
       </MapView>
+
+      <TouchableOpacity
+        style={[styles.locationButton, { backgroundColor: fundo }]}
+        onPress={buscarMinhaLocalizacao}
+      >
+        <Image
+          source={iconLocalizacao}
+          style={{ width: 30, height: 30, tintColor: texto }}
+          resizeMode="contain"
+        />
+      </TouchableOpacity>
     </View>
-  );
+  )
 }
 
-// --- ESTILOS ---
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   map: {
     ...StyleSheet.absoluteFillObject,
   },
-  markerContainer: {
-    width: 30,
-    height: 30,
-    borderRadius: 15, // Círculo perfeito
+  center: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5, // Sombra para Android
-    shadowColor: '#000', // Sombra para iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
   },
-  markerText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
+  loading: {
+    marginTop: 10,
+    fontFamily: 'Poppins-Regular',
   },
-  markerTriangle: {
-    // Truque de CSS/RN para fazer um triângulo
-    width: 0,
-    height: 0,
-    backgroundColor: 'transparent',
-    borderStyle: 'solid',
-    borderLeftWidth: 6,
-    borderRightWidth: 6,
-    borderTopWidth: 10,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    alignSelf: 'center',
-    marginTop: -2, // "Gruda" na parte de baixo do círculo
+  markerIcon: {
+    width: 40,
+    height: 40,
   },
-});
-
+  locationButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+})

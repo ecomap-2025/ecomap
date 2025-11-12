@@ -1,71 +1,58 @@
-import { useThemeColor } from '@/hooks/use-theme-color';
-import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useThemeColor } from '@/hooks/use-theme-color'
+import axios from 'axios'
+import { useRouter } from 'expo-router'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
   Dimensions,
   Image,
-  Linking,
   Modal,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-} from 'react-native';
+  View
+} from 'react-native'
 
-const { width, height } = Dimensions.get('window');
-const API_BASE_URL = 'https://ecomap-api-013m.onrender.com/api';
-const residuos = `${API_BASE_URL}/tipos-residuo/`;
-
+const { width, height } = Dimensions.get('window')
+const API_BASE_URL = 'https://ecomap-api-013m.onrender.com/api'
 
 interface ApiTipoResiduo {
-  id: number;
-  nome: string;
-  reciclavel: boolean;
+  id: number
+  nome: string
+  reciclavel: boolean
 }
 
 interface ApiCooperativa {
-  id: number;
-  nome: string;
-  responsavel: string;
-  telefone: string;
-  email: string;
-  endereco: string;
-  localizacao: any;
-  tipos_residuos_aceitos: number[];
-}
-
-interface ApiPontoProperties {
-  id: number;
-  nome: string;
-  horario_funcionamento: string;
-  telefone: string;
-  email: string;
-  endereco: string;
-  localizacao: any;
-  tipos_residuos_aceitos: number[];
+  id: number
+  nome: string
+  responsavel: string
+  telefone: string
+  email: string
+  endereco: string
+  localizacao: any
 }
 
 interface GeoJSONFeature {
-  type: string;
-  properties: any;
-  geometry: any;
+  id: number
+  type: string
+  properties: any
+  geometry: any
 }
 
 interface Ponto {
-  id: string;
-  nome: string;
-  tipos: string[];
-  origem: 'ponto' | 'cooperativa';
-  responsavel: string | null;
-  horario_funcionamento: string | null;
-  telefone: string | null;
-  email: string | null;
-  endereco: string | null;
-  localizacao: any;
+  id: string
+  nome: string
+  tipos: string[]
+  origem: 'ponto' | 'cooperativa'
+  responsavel: string | null
+  horario_funcionamento: string | null
+  telefone: string | null
+  email: string | null
+  endereco: string | null
+  localizacao: any
 }
 
 const pesquisaStyles = StyleSheet.create({
@@ -100,17 +87,13 @@ const pesquisaStyles = StyleSheet.create({
     color: '#232323',
     fontFamily: 'Poppins-SemiBold',
   },
-});
+})
 
-function PesquisaInput({ onSearch }: { onSearch: (searchText: string) => void; }) {
-  const [query, setQuery] = useState('');
+function PesquisaInput({ onSearch }: { onSearch: (searchText: string) => void }) {
+  const [query, setQuery] = useState('')
 
-  const handleChange = (text: string) => {
-    setQuery(text);
-  };
-  const handleSearch = () => {
-    onSearch(query);
-  };
+  const handleChange = (text: string) => setQuery(text)
+  const handleSearch = () => onSearch(query)
 
   return (
     <View style={pesquisaStyles.container}>
@@ -133,150 +116,120 @@ function PesquisaInput({ onSearch }: { onSearch: (searchText: string) => void; }
         </TouchableOpacity>
       </View>
     </View>
-  );
+  )
 }
 
-
 export default function IndexScreen() {
-  const fundo = useThemeColor({}, 'background');
-  const texto = useThemeColor({}, 'text');
+  const fundo = useThemeColor({}, 'background')
+  const texto = useThemeColor({}, 'text')
+  const router = useRouter()
 
-  const [carregando, setCarregando] = useState(true);
-  const [todosOsPontos, setTodosOsPontos] = useState<Ponto[]>([]);
-  const [pontosFiltrados, setPontosFiltrados] = useState<Ponto[]>([]);
-  const [tiposResiduoMap, setTiposResiduoMap] = useState<Map<number, string>>(new Map());
+  const [carregando, setCarregando] = useState(true)
+  const [todosOsPontos, setTodosOsPontos] = useState<Ponto[]>([])
+  const [pontosFiltrados, setPontosFiltrados] = useState<Ponto[]>([])
+  const [tiposResiduoMap, setTiposResiduoMap] = useState<Map<number, string>>(new Map())
 
-  const [modalVisivel, setModalVisivel] = useState(false);
-  const [pontoSelecionado, setPontoSelecionado] = useState<Ponto | null>(null);
-
-  const converterIdsParaNomes = (ids: number[], map: Map<number, string>): string[] => {
-    if (!ids || !map) return [];
-    return ids.map(id => map.get(id) || 'Desconhecido').filter(Boolean);
-  };
+  const [modalVisivel, setModalVisivel] = useState(false)
+  const [pontoSelecionado, setPontoSelecionado] = useState<Ponto | null>(null)
 
   useEffect(() => {
     const buscarDados = async () => {
-      setCarregando(true);
+      setCarregando(true)
       try {
         const [responseTipos, responsePontos, responseCoops] = await Promise.all([
-          // Usamos a interface que você já definiu
-          axios.get<ApiTipoResiduo[]>(`${API_BASE_URL}/tipos-residuo/`), 
+          axios.get<ApiTipoResiduo[]>(`${API_BASE_URL}/tipos-residuo/`),
           axios.get<any>(`${API_BASE_URL}/pontos-coleta/`),
-          axios.get<any>(`${API_BASE_URL}/cooperativas/`)
-        ]);
-        const dadosTipos: ApiTipoResiduo[] = responseTipos.data;
+          axios.get<any>(`${API_BASE_URL}/cooperativas/`),
+        ])
 
-        if (!Array.isArray(dadosTipos)) {
-          throw new Error("Formato de dados inesperado (tipos-residuo não é um array)");
-        }
+        const dadosTipos = responseTipos.data
+        const tiposMap = new Map(dadosTipos.map(tipo => [tipo.id, tipo.nome]))
+        setTiposResiduoMap(tiposMap)
 
-        const tiposMap = new Map(
-          dadosTipos.map(tipo => [
-            tipo.id,
-            tipo.nome
-          ])
-        );
-        setTiposResiduoMap(tiposMap);
-
-        const dadosPontos: GeoJSONFeature[] = responsePontos.data.features;
-        if (!Array.isArray(dadosPontos)) {
-          throw new Error("Formato de dados inesperado (pontos-coleta não tem 'features')");
-        }
-
+        const dadosPontos: GeoJSONFeature[] = responsePontos.data.features
         const pontosFormatados: Ponto[] = dadosPontos.map(feature => ({
-          id: `ponto-${feature.properties.id}`,
+          id: `ponto-${feature.id}`,
           nome: feature.properties.nome,
-          tipos: converterIdsParaNomes(feature.properties.tipos_residuos_aceitos, tiposMap),
+          tipos: feature.properties.tipos_residuos_aceitos,
           origem: 'ponto',
           responsavel: null,
           horario_funcionamento: feature.properties.horario_funcionamento,
           telefone: feature.properties.telefone,
           email: feature.properties.email,
           endereco: feature.properties.endereco,
-          localizacao: feature.properties.localizacao,
-        }));
+          localizacao: feature.geometry,
+        }))
 
-        const dadosCoopsFeatures: GeoJSONFeature[] = responseCoops.data.features;
-
-        if (!Array.isArray(dadosCoopsFeatures)) {
-          throw new Error("Formato de dados inesperado (cooperativas não é um array ou não tem 'features')");
-        }
-
-        const coopsFormatadas: Ponto[] = dadosCoopsFeatures.map(feature => {
-          const coop: ApiCooperativa = feature.properties;
+        const dadosCoops: GeoJSONFeature[] = responseCoops.data.features
+        const coopsFormatadas: Ponto[] = dadosCoops.map(feature => {
+          const coop: ApiCooperativa = feature.properties
           return {
             id: `coop-${coop.id}`,
             nome: coop.nome,
-            tipos: converterIdsParaNomes(coop.tipos_residuos_aceitos, tiposMap),
+            tipos: [],
             origem: 'cooperativa',
-            responsavel: coop.responsavel,
+            responsavel: coop.responsavel || 'Não informado',
             horario_funcionamento: null,
             telefone: coop.telefone,
             email: coop.email,
             endereco: coop.endereco,
-            localizacao: coop.localizacao,
-          };
-        });
+            localizacao: feature.geometry,
+          }
+        })
 
-        const dadosCombinados = [...pontosFormatados, ...coopsFormatadas];
-
-        setTodosOsPontos(dadosCombinados);
-        setPontosFiltrados(dadosCombinados);
-
+        const dadosCombinados = [...pontosFormatados, ...coopsFormatadas]
+        setTodosOsPontos(dadosCombinados)
+        setPontosFiltrados(dadosCombinados)
       } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        const msg = error instanceof Error ? error.message : 'Não foi possível carregar os dados.';
-        Alert.alert('Erro', msg);
+        console.error('Erro ao buscar dados:', error)
+        const msg = error instanceof Error ? error.message : 'Não foi possível carregar os dados.'
+        Alert.alert('Erro', msg)
       } finally {
-        setCarregando(false);
+        setCarregando(false)
       }
-    };
+    }
 
-    buscarDados();
-  }, []);
-
+    buscarDados()
+  }, [])
 
   const handleSearchSubmit = (searchText: string) => {
     if (!searchText) {
-      setPontosFiltrados(todosOsPontos);
-      return;
+      setPontosFiltrados(todosOsPontos)
+      return
     }
-    const textoBusca = searchText.toLowerCase();
+    const textoBusca = searchText.toLowerCase()
     const resultado = todosOsPontos.filter(ponto => {
-      const nomeMatch = ponto.nome.toLowerCase().includes(textoBusca);
-      const tipoMatch = ponto.tipos.some(tipo => tipo.toLowerCase().includes(textoBusca));
-      return nomeMatch || tipoMatch;
-    });
-    setPontosFiltrados(resultado);
-  };
+      const nomeMatch = ponto.nome.toLowerCase().includes(textoBusca)
+      const tipoMatch = ponto.tipos.some(tipo => tipo.toLowerCase().includes(textoBusca))
+      return nomeMatch || tipoMatch
+    })
+    setPontosFiltrados(resultado)
+  }
 
   const handleAbrirModal = (ponto: Ponto) => {
-    setPontoSelecionado(ponto);
-    setModalVisivel(true);
-  };
+    setPontoSelecionado(ponto)
+    setModalVisivel(true)
+  }
 
   const handleFecharModal = () => {
-    setModalVisivel(false);
-    setPontoSelecionado(null);
-  };
+    setModalVisivel(false)
+    setPontoSelecionado(null)
+  }
 
   const handleAbrirMapa = (ponto: Ponto) => {
-    let url = '';
-
-    if (ponto.localizacao && ponto.localizacao.coordinates) {
-      const [longitude, latitude] = ponto.localizacao.coordinates;
-      url = `http://www.openstreetmap.org/?mlat=${latitude}&mlon=${longitude}#map=18/${latitude}/${longitude}`;
+    if (ponto.localizacao?.coordinates) {
+      const [longitude, latitude] = ponto.localizacao.coordinates
+      router.push({
+        pathname: '/mapa',
+        params: {
+          latitude: latitude.toString(),
+          longitude: longitude.toString(),
+        },
+      })
+    } else {
+      Alert.alert('Erro', 'Este local não possui coordenadas cadastradas.')
     }
-    else if (ponto.endereco) {
-      url = `http://www.openstreetmap.org/search?query=${encodeURIComponent(ponto.endereco)}`;
-    }
-    else {
-      Alert.alert("Erro", "Este local não possui um endereço ou localização cadastrada.");
-      return;
-    }
-
-    Linking.openURL(url).catch(err => Alert.alert("Erro", "Não foi possível abrir o aplicativo de mapas."));
-  };
+  }
 
   const styles = StyleSheet.create({
     container: {
@@ -349,13 +302,8 @@ export default function IndexScreen() {
       marginTop: 2,
       textTransform: 'uppercase',
     },
-    cardTypePonto: {
-      color: '#2a6f4e',
-    },
-    cardTypeCoop: {
-      color: '#2a6f4e',
-      fontFamily: 'Poppins-Regular',
-    },
+    cardTypePonto: { color: '#2a6f4e' },
+    cardTypeCoop: { color: '#2a6f4e' },
     cardAccepts: {
       fontSize: width * 0.035,
       fontFamily: 'Poppins-Regular',
@@ -432,22 +380,17 @@ export default function IndexScreen() {
       fontSize: width * 0.04,
       fontFamily: 'Poppins-SemiBold',
     },
-  });
+  })
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.headerContainer}>
           <Image source={require('@/assets/imgs/logo.png')} style={styles.logo} />
         </View>
 
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>
-            Pesquisar Locais
-          </Text>
+          <Text style={styles.title}>Pesquisar Locais</Text>
           <Text style={styles.subtitle}>
             Encontre cooperativas e ecopontos por nome ou tipo de resíduo.
           </Text>
@@ -459,20 +402,26 @@ export default function IndexScreen() {
             <ActivityIndicator size="large" color={texto} style={styles.loading} />
           ) : pontosFiltrados.length > 0 ? (
             pontosFiltrados.map(ponto => (
-              <TouchableOpacity key={ponto.id} onPress={() => handleAbrirModal(ponto)} activeOpacity={0.7}>
+              <TouchableOpacity
+                key={ponto.id}
+                onPress={() => handleAbrirModal(ponto)}
+                activeOpacity={0.7}
+              >
                 <View style={styles.card}>
                   <Text style={styles.cardTitle}>{ponto.nome}</Text>
-
-                  <Text style={[
-                    styles.cardTypeBase,
-                    ponto.origem === 'ponto' ? styles.cardTypePonto : styles.cardTypeCoop
-                  ]}>
+                  <Text
+                    style={[
+                      styles.cardTypeBase,
+                      ponto.origem === 'ponto' ? styles.cardTypePonto : styles.cardTypeCoop,
+                    ]}
+                  >
                     {ponto.origem === 'ponto' ? 'Ponto de Coleta' : 'Cooperativa'}
                   </Text>
-
-                  <Text style={styles.cardAccepts}>
-                    Aceita: {ponto.tipos.length > 0 ? ponto.tipos.join(', ') : 'Não especificado'}
-                  </Text>
+                  {ponto.origem === 'ponto' && (
+                    <Text style={styles.cardAccepts}>
+                      Aceita: {ponto.tipos.length > 0 ? ponto.tipos.join(', ') : 'Não especificado'}
+                    </Text>
+                  )}
                 </View>
               </TouchableOpacity>
             ))
@@ -480,12 +429,11 @@ export default function IndexScreen() {
             <Text style={styles.noResults}>Nenhum resultado encontrado.</Text>
           )}
         </View>
-
       </ScrollView>
 
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={modalVisivel}
         onRequestClose={handleFecharModal}
       >
@@ -494,25 +442,32 @@ export default function IndexScreen() {
             {pontoSelecionado && (
               <>
                 <Text style={styles.modalTitle}>{pontoSelecionado.nome}</Text>
-
-                <Text style={[
-                  styles.modalTypeBase,
-                  pontoSelecionado.origem === 'ponto' ? styles.cardTypePonto : styles.cardTypeCoop
-                ]}>
+                <Text
+                  style={[
+                    styles.modalTypeBase,
+                    pontoSelecionado.origem === 'ponto'
+                      ? styles.cardTypePonto
+                      : styles.cardTypeCoop,
+                  ]}
+                >
                   {pontoSelecionado.origem === 'ponto' ? 'Ponto de Coleta' : 'Cooperativa'}
                 </Text>
 
                 {pontoSelecionado.origem === 'cooperativa' && (
                   <>
                     <Text style={styles.modalLabel}>Responsável:</Text>
-                    <Text style={styles.modalInfo}>{pontoSelecionado.responsavel || 'Não informado'}</Text>
+                    <Text style={styles.modalInfo}>
+                      {pontoSelecionado.responsavel || 'Não informado'}
+                    </Text>
                   </>
                 )}
 
                 {pontoSelecionado.origem === 'ponto' && (
                   <>
                     <Text style={styles.modalLabel}>Horário de Funcionamento:</Text>
-                    <Text style={styles.modalInfo}>{pontoSelecionado.horario_funcionamento || 'Não informado'}</Text>
+                    <Text style={styles.modalInfo}>
+                      {pontoSelecionado.horario_funcionamento || 'Não informado'}
+                    </Text>
                   </>
                 )}
 
@@ -526,10 +481,16 @@ export default function IndexScreen() {
                 <Text style={styles.modalInfo}>{pontoSelecionado.endereco || 'Não informado'}</Text>
 
                 <View style={styles.modalButtonContainer}>
-                  <TouchableOpacity style={[styles.modalButtonBase, styles.modalButtonMap]} onPress={() => handleAbrirModal(pontoSelecionado)}>
+                  <TouchableOpacity
+                    style={[styles.modalButtonBase, styles.modalButtonMap]}
+                    onPress={() => handleAbrirMapa(pontoSelecionado)}
+                  >
                     <Text style={styles.modalButtonText}>Ver no Mapa</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={[styles.modalButtonBase, styles.modalButtonClose]} onPress={handleFecharModal}>
+                  <TouchableOpacity
+                    style={[styles.modalButtonBase, styles.modalButtonClose]}
+                    onPress={handleFecharModal}
+                  >
                     <Text style={styles.modalButtonText}>Fechar</Text>
                   </TouchableOpacity>
                 </View>
@@ -538,7 +499,6 @@ export default function IndexScreen() {
           </View>
         </View>
       </Modal>
-
     </View>
-  );
+  )
 }
